@@ -1,2 +1,0 @@
-# PyGame-Project
-colour schemes
