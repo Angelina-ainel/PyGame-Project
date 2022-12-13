@@ -1,0 +1,1 @@
+print('there will be an interface for menu and everything else')
