@@ -114,8 +114,8 @@ class Field:
 if __name__ == '__main__':
     pg.init()
     screen = pg.display.set_mode((450, 750))
-    lt = np.array((239, 38, 226))
-    rt = np.array((24, 240, 168))
+    lt = np.array((239, 38, 226)) # хранить цвета в numpy-массиве, потом перемешивать и отрисовывать в спрайтах
+    rt = np.array((24, 240, 168)) # можно хранить статичость в отдельном атрибуте
     lb = np.array((247, 246, 198))
     rb = np.array((16, 6, 107))
     level = Field(6, 8, lt, rt, lb, rb)
