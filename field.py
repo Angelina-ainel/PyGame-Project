@@ -87,14 +87,14 @@ class Field:
             if c < self.width: # or (c == 0 and r == 0)
                 Element(r, c, self.top, self.cell_size,
                         self.left_top + (coeff_h_left * r) + (coeff_w * c), self.all_elems)
-                print(c, r)
+                # print(c, r)
                 c += 1
             else:
                 c = 0
                 r += 1
                 Element(r, c, self.top, self.cell_size, self.left_top + (coeff_h_left * r), self.all_elems)
                 drawn_1 = True
-                print('element was drown on the left')
+                # print('element was drown on the left')
 
     def get_click(self, mouse_pos):
         cell = self.get_cell(mouse_pos)
@@ -113,13 +113,13 @@ class Field:
 
 if __name__ == '__main__':
     pg.init()
-    screen = pg.display.set_mode((900, 900))
+    screen = pg.display.set_mode((450, 750))
     lt = np.array((239, 38, 226))
     rt = np.array((24, 240, 168))
     lb = np.array((247, 246, 198))
     rb = np.array((16, 6, 107))
-    level = Field(10, 13, lt, rt, lb, rb)
-    level.set_view(0, 75, 50)
+    level = Field(6, 8, lt, rt, lb, rb)
+    level.set_view(0, 75, 75)
     running = True
     level.render()
     while running:
