@@ -1,6 +1,7 @@
 import pygame as pg
 import numpy as np
 from PIL import ImageColor
+import random
 
 
 class Element(pg.sprite.Sprite):
@@ -70,11 +71,12 @@ class Field:
 if __name__ == '__main__':
     pg.init()
     screen = pg.display.set_mode((950, 950))
-    lt = np.array((222, 200, 100))
+    lt = np.array((241, 180, 200))
     rt = np.array((16, 117, 249))
-    lb = np.array((34, 244, 111))
-    rb = np.array((230, 11, 255))
-    level = Field(13, 16, lt, rt, lb, rb)
+    lb = np.array((130, 210, 120))
+    rb = np.array((200, 11, 255))
+
+    level = Field(9, 13, lt, rt, lb, rb)
     level.set_view(0, 75, 50)
     running = True
     level.render()
