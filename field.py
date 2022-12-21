@@ -30,6 +30,7 @@ class Field:
         self.left_bottom = color3
         self.right_bottom = color4
         self.all_elems = pg.sprite.Group()
+        self.colors = []
 
     def set_view(self, left, top, cell_size):
         self.left = left
@@ -45,13 +46,19 @@ class Field:
             if c < self.width:
                 if c == 0 and r != 0:
                     c += 1
-                Element(r, c, self.top, self.cell_size,
-                        self.left_top + (coeff_h_left * r) + (coeff_w * c), self.all_elems)
+                color = self.left_top + (coeff_h_left * r) + (coeff_w * c)
+                Element(r, c, self.top, self.cell_size, color, self.all_elems)
                 c += 1
+                self.colors.append(color)
             else:
                 c = 0
                 r += 1
                 Element(r, c, self.top, self.cell_size, self.left_top + (coeff_h_left * r), self.all_elems)
+                self.colors.append(self.left_top + (coeff_h_left * r))
+        print(len(self.colors))
+
+    def make_array(self):
+        np_colors = np.array(self.colors) # нужно разобраться, как конкретно получаются лишние цвета в self.colors
 
     def get_click(self, mouse_pos):
         cell = self.get_cell(mouse_pos)
@@ -76,7 +83,7 @@ if __name__ == '__main__':
     lb = np.array((130, 210, 120))
     rb = np.array((200, 11, 255))
 
-    level = Field(9, 13, lt, rt, lb, rb)
+    level = Field(6, 8, lt, rt, lb, rb)
     level.set_view(0, 75, 50)
     running = True
     level.render()
