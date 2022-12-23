@@ -39,14 +39,17 @@ class Field:
 
     def render(self):
         r, c = 0, 0
-        coeff_h_left = (self.left_bottom - self.left_top) // self.height
-        coeff_h_right = (self.right_bottom - self.right_top) // self.height
-        for n in range(self.height * self.width + self.width):
-            coeff_w = ((self.right_top + (coeff_h_right * r)) - (self.left_top + (coeff_h_left * r))) // self.width
+        coeff_h_left = np.trunc((self.left_bottom - self.left_top) / (self.height - 1))
+        coeff_h_right = np.trunc((self.right_bottom - self.right_top) / (self.height - 1))
+        for n in range(self.height * self.width):
+            coeff_w = np.trunc(((self.right_top + (coeff_h_right * r)) -
+                       (self.left_top + (coeff_h_left * r))) / (self.width - 1))
             if c < self.width:
                 if c == 0 and r != 0:
                     c += 1
+
                 color = self.left_top + (coeff_h_left * r) + (coeff_w * c)
+                print(color)
                 Element(r, c, self.top, self.cell_size, color, self.all_elems)
                 c += 1
                 self.colors.append(color)
@@ -58,7 +61,8 @@ class Field:
         print(len(self.colors))
 
     def make_array(self):
-        np_colors = np.array(self.colors) # нужно разобраться, как конкретно получаются лишние цвета в self.colors
+        np_colors = np.array(self.colors)
+        # нужно разобраться, как конкретно получаются лишние цвета в self.colors
 
     def get_click(self, mouse_pos):
         cell = self.get_cell(mouse_pos)
@@ -78,10 +82,10 @@ class Field:
 if __name__ == '__main__':
     pg.init()
     screen = pg.display.set_mode((950, 950))
-    lt = np.array((241, 180, 200))
-    rt = np.array((16, 117, 249))
-    lb = np.array((130, 210, 120))
-    rb = np.array((200, 11, 255))
+    lt = np.array((98, 0, 5))
+    rt = np.array((65, 120, 8))
+    lb = np.array((220, 210, 255))
+    rb = np.array((30, 2, 140))
 
     level = Field(6, 8, lt, rt, lb, rb)
     level.set_view(0, 75, 50)
