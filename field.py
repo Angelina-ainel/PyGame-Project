@@ -49,7 +49,7 @@ class Field:
                     c += 1
 
                 color = self.left_top + (coeff_h_left * r) + (coeff_w * c)
-                print(color)
+                # print(color)
                 Element(r, c, self.top, self.cell_size, color, self.all_elems)
                 c += 1
                 self.colors.append(color)
@@ -58,11 +58,16 @@ class Field:
                 r += 1
                 Element(r, c, self.top, self.cell_size, self.left_top + (coeff_h_left * r), self.all_elems)
                 self.colors.append(self.left_top + (coeff_h_left * r))
-        print(len(self.colors))
+        # print(len(self.colors))
+
+    def mix_elements(self):
+        random.shuffle(self.all_elems.sprites())
+    # записала идею в google doc
+        pass
 
     def make_array(self):
         np_colors = np.array(self.colors)
-        # нужно разобраться, как конкретно получаются лишние цвета в self.colors
+
 
     def get_click(self, mouse_pos):
         cell = self.get_cell(mouse_pos)
@@ -96,7 +101,6 @@ if __name__ == '__main__':
             if event.type == pg.QUIT:
                 running = False
         screen.fill((0, 0, 0))
-
         level.all_elems.draw(screen)
         pg.display.flip()
     pg.quit()
