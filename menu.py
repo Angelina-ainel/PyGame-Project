@@ -1,4 +1,4 @@
-# print('there will be an interface for menu and everything else')
+import sys
 import pygame
 
 pygame.init()
@@ -33,24 +33,28 @@ class Menu:
             surface.blit(opt, option_rect)
 
 
-menu = Menu()
-menu.append_option('Цветовые гаммы', lambda: print('Цветовые гаммы'))
-menu.append_option('Выйти из игры', pygame.quit)
+def terminate():
+    pygame.quit()
+    sys.exit()
 
-running = True
-while running:
+
+menu = Menu()
+menu.append_option('Выбрать режим игры', lambda: print('Выбрать режим игры'))
+menu.append_option('Настройки', lambda: print('В разработке'))
+menu.append_option('Выйти из игры', terminate)
+
+while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            terminate()
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_w:
+            if event.key == pygame.K_w or event.key == pygame.K_UP:
                 menu.switch(-1)
-            elif event.key == pygame.K_s:
+            elif event.key == pygame.K_s or event.key == pygame.K_DOWN:
                 menu.switch(1)
-            elif event.key == pygame.K_SPACE:
+            elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
                 menu.select()
 
-    screen.fill((255, 240, 245))
-    menu.draw(screen, 100, 100, 75)
+    screen.fill((255, 192, 203))
+    menu.draw(screen, 150, 200, 75)
     pygame.display.flip()
-pygame.quit()
