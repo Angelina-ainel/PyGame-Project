@@ -21,14 +21,31 @@ class Element(pg.sprite.Sprite):
         pg.draw.rect(self.image, self.color, self.rect)
         self.fixed = fixed
         if self.fixed:
-            pg.draw.circle(self.image, 'black', self.rect.center, 3)
+            pg.draw.circle(self.image, 'black', self.rect.center, cell_size // 17)
         self.mixed = False
         self.rect.x = col * cell_size
         self.rect.y = top + row * cell_size
         self.id = id
+        self.pushed = False
+        self.size = cell_size
+        self.group = groups[0]
 
-    def update(self):
-        pass
+    def update(self, *args):
+        if args and args[0].type == pg.MOUSEBUTTONDOWN and args[0].button == pg.BUTTON_LEFT:
+            if self.rect.x < event.pos[0] < self.rect.x + self.size and \
+                    self.rect.y < event.pos[1] < self.rect.y + self.size and not self.fixed:
+                self.pushed = True
+        if args and args[0].type == pg.MOUSEBUTTONUP:
+            if self.pushed:
+                if pg.sprite.spritecollide(self, self.group, False):
+                    # print(pg.sprite.spritecollide(self, self.group, False))
+                    pass
+            self.pushed = False
+
+        if args and args[0].type == pg.MOUSEMOTION:
+            if self.pushed:
+                dx, dy = args[0].rel
+                self.rect.topleft = self.rect.x + dx, self.rect.y + dy
 
 
 class Field:
@@ -110,21 +127,23 @@ class Field:
 
 if __name__ == '__main__':
     pg.init()
-    screen = pg.display.set_mode((950, 950))
+    screen = pg.display.set_mode((450, 750))
     lt = np.array((31, 255, 255))
     rt = np.array((90, 255, 106))
     lb = np.array((255, 118, 233))
     rb = np.array((255, 250, 63))
 
     level = Field(6, 8, lt, rt, lb, rb, '4 corners')
-    level.set_view(0, 75, 50)
+    level.set_view(0, 75, 75)
     running = True
+    pushed = False
     level.render()
     level.mix_elements()
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
+            level.all_elems.update(event)
         screen.fill((0, 0, 0))
         level.all_elems.draw(screen)
 
