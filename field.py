@@ -12,11 +12,26 @@ def condition(elem):
     return False
 
 
+class Border(pg.sprite.Sprite):
+    # строго вертикальный или строго горизонтальный отрезок
+    def __init__(self, x1, y1, x2, y2):
+        super().__init__(all_sprites)
+        if x1 == x2:  # вертикальная стенка
+            self.add(vertical_borders)
+            self.image = pg.Surface([1, y2 - y1])
+            self.rect = pg.Rect(x1, y1, 1, y2 - y1)
+        else:  # горизонтальная стенка
+            self.add(horizontal_borders)
+            self.image = pg.Surface([x2 - x1, 1])
+            self.rect = pg.Rect(x1, y1, x2 - x1, 1)
+
+
 class Element(pg.sprite.Sprite):
     def __init__(self, row, col, top, cell_size, color, fixed, id, *groups):
         super(Element, self).__init__(*groups)
         self.image = pg.Surface((cell_size, cell_size))
         self.rect = self.image.get_rect()
+        self.mask = pg.mask.from_surface(self.image)
         self.color = color
         pg.draw.rect(self.image, self.color, self.rect)
         self.fixed = fixed
@@ -32,14 +47,19 @@ class Element(pg.sprite.Sprite):
 
     def update(self, *args):
         if args and args[0].type == pg.MOUSEBUTTONDOWN and args[0].button == pg.BUTTON_LEFT:
-            if self.rect.x < event.pos[0] < self.rect.x + self.size and \
-                    self.rect.y < event.pos[1] < self.rect.y + self.size and not self.fixed:
+            if self.rect.x < args[0].pos[0] < self.rect.x + self.size and \
+                    self.rect.y < args[0].pos[1] < self.rect.y + self.size and not self.fixed:
                 self.pushed = True
         if args and args[0].type == pg.MOUSEBUTTONUP:
             if self.pushed:
-                if pg.sprite.spritecollide(self, self.group, False):
+                pass
+                # max(sprite for sprite in self.group if pg.col
+                # BaSK
+                # SELT, sprite
+                # key = Lambda
+                # s: self.mask.overlap_area(s.mask, ))
+                # if pg.sprite.spritecollide(self, self.group, False):
                     # print(pg.sprite.spritecollide(self, self.group, False))
-                    pass
             self.pushed = False
 
         if args and args[0].type == pg.MOUSEMOTION:
@@ -127,12 +147,19 @@ class Field:
 
 if __name__ == '__main__':
     pg.init()
+    width, height = size = 450, 750
     screen = pg.display.set_mode((450, 750))
     lt = np.array((31, 255, 255))
     rt = np.array((90, 255, 106))
     lb = np.array((255, 118, 233))
     rb = np.array((255, 250, 63))
-
+    all_sprites = pg.sprite.Group()
+    horizontal_borders = pg.sprite.Group()
+    vertical_borders = pg.sprite.Group()
+    Border(0, 0, width, 0)
+    Border(0, height, width, height)
+    Border(0, 0, 0, height)
+    Border(width, 0, width, height)
     level = Field(6, 8, lt, rt, lb, rb, '4 corners')
     level.set_view(0, 75, 75)
     running = True
