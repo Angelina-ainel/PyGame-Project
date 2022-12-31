@@ -1,6 +1,6 @@
 import pygame as pg
 import numpy as np
-from PIL import ImageColor
+# from PIL import ImageColor
 import random
 
 fixed_elems = ['4 corners', 'whole frame', 'vertical lines', 'horizontal lines']
@@ -52,12 +52,12 @@ class Element(pg.sprite.Sprite):
                 self.pushed = True
         if args and args[0].type == pg.MOUSEBUTTONUP:
             if self.pushed:
-                pass
-                # max(sprite for sprite in self.group if pg.col
-                # BaSK
-                # SELT, sprite
-                # key = Lambda
-                # s: self.mask.overlap_area(s.mask, ))
+                change_places = max((sprite for sprite in self.group if pg.sprite.collide_mask(self, sprite)),
+                    key=lambda s: self.mask.overlap_area(s.mask, (self.mask.get_rect().left - s.mask.get_rect().left,
+                                                                  self.mask.get_rect().top - s.mask.get_rect().top)))
+                print(change_places.id)
+                self.rect.topleft, change_places.rect.topleft = change_places.rect.topleft, self.rect.topleft
+                # self.rect.move
                 # if pg.sprite.spritecollide(self, self.group, False):
                     # print(pg.sprite.spritecollide(self, self.group, False))
             self.pushed = False
