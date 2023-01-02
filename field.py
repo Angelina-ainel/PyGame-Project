@@ -12,11 +12,6 @@ def condition_to_mix(elem):
     return False
 
 
-def condition_to_change_places(sprite1, sprite2):
-    if pg.sprite.collide_mask(sprite1, sprite2) and not sprite2.fixed:
-        pass
-
-
 class Border(pg.sprite.Sprite):
     def __init__(self, x1, y1, x2, y2):
         super().__init__(all_sprites)
