@@ -6,21 +6,25 @@ import random
 fixed_elems = ['4 corners', 'whole frame', 'vertical lines', 'horizontal lines']
 
 
-def condition(elem):
+def condition_to_mix(elem):
     if not elem.mixed and not elem.fixed:
         return True
     return False
 
 
+def condition_to_change_places(sprite1, sprite2):
+    if pg.sprite.collide_mask(sprite1, sprite2) and not sprite2.fixed:
+        pass
+
+
 class Border(pg.sprite.Sprite):
-    # строго вертикальный или строго горизонтальный отрезок
     def __init__(self, x1, y1, x2, y2):
         super().__init__(all_sprites)
-        if x1 == x2:  # вертикальная стенка
+        if x1 == x2:
             self.add(vertical_borders)
             self.image = pg.Surface([1, y2 - y1])
             self.rect = pg.Rect(x1, y1, 1, y2 - y1)
-        else:  # горизонтальная стенка
+        else:
             self.add(horizontal_borders)
             self.image = pg.Surface([x2 - x1, 1])
             self.rect = pg.Rect(x1, y1, x2 - x1, 1)
@@ -44,28 +48,38 @@ class Element(pg.sprite.Sprite):
         self.pushed = False
         self.size = cell_size
         self.group = groups[0]
+        self.pushed_elem_topleft = 0, 0
 
     def update(self, *args):
         if args and args[0].type == pg.MOUSEBUTTONDOWN and args[0].button == pg.BUTTON_LEFT:
             if self.rect.x < args[0].pos[0] < self.rect.x + self.size and \
                     self.rect.y < args[0].pos[1] < self.rect.y + self.size and not self.fixed:
                 self.pushed = True
+                self.pushed_elem_topleft = self.rect.topleft
+                self.group.remove(self)
+                self.group.add(self)
         if args and args[0].type == pg.MOUSEBUTTONUP:
             if self.pushed:
-                change_places = max((sprite for sprite in self.group if pg.sprite.collide_mask(self, sprite)),
-                    key=lambda s: self.mask.overlap_area(s.mask, (self.mask.get_rect().left - s.mask.get_rect().left,
-                                                                  self.mask.get_rect().top - s.mask.get_rect().top)))
-                print(change_places.id)
-                self.rect.topleft, change_places.rect.topleft = change_places.rect.topleft, self.rect.topleft
-                # self.rect.move
-                # if pg.sprite.spritecollide(self, self.group, False):
-                    # print(pg.sprite.spritecollide(self, self.group, False))
-            self.pushed = False
+                change_places = max((filter(lambda sprite: pg.sprite.collide_mask(self, sprite) and not sprite.fixed
+                                            and sprite != self, self.group)),
+                                    key=lambda s: self.mask.overlap_area(s.mask, (self.rect.x - s.rect.x,
+                                                                                  self.rect.y - s.rect.y)))
+                if self.rect.width * self.rect.height // 2 < self.mask.overlap_area(change_places.mask,
+                                                                                    (self.rect.x - change_places.rect.x,
+                                                                                  self.rect.y - change_places.rect.y)):
+                    self.rect.topleft, change_places.rect.topleft = change_places.rect.topleft, self.pushed_elem_topleft
+                else:
+                    self.rect.topleft = self.pushed_elem_topleft
+                self.pushed = False
 
         if args and args[0].type == pg.MOUSEMOTION:
             if self.pushed:
-                dx, dy = args[0].rel
-                self.rect.topleft = self.rect.x + dx, self.rect.y + dy
+                if not pg.sprite.spritecollideany(self, horizontal_borders) or \
+                        not pg.sprite.spritecollideany(self, vertical_borders):
+                    dx, dy = args[0].rel
+                    self.rect.topleft = self.rect.x + dx, self.rect.y + dy
+                else:
+                    self.rect.topleft = self.rect.topleft
 
 
 class Field:
@@ -125,8 +139,8 @@ class Field:
     def mix_elements(self):
         for i in range(len(self.list_elems)):
             if not self.list_elems[i].mixed and not self.list_elems[i].fixed:
-                pair = random.choice(list(filter(condition, self.list_elems)))
-                self.list_elems[i].rect.topleft, pair.rect.topleft = pair.rect.topleft, self.list_elems[i].rect.topleft
+                pair = random.choice(list(filter(condition_to_mix, self.list_elems)))
+                self.list_elems[i].rect, pair.rect = pair.rect, self.list_elems[i].rect
                 pair.mixed = True
                 self.list_elems[i].mixed = True
 
@@ -148,7 +162,7 @@ class Field:
 if __name__ == '__main__':
     pg.init()
     width, height = size = 450, 750
-    screen = pg.display.set_mode((450, 750))
+    screen = pg.display.set_mode(size)
     lt = np.array((31, 255, 255))
     rt = np.array((90, 255, 106))
     lb = np.array((255, 118, 233))
@@ -156,8 +170,8 @@ if __name__ == '__main__':
     all_sprites = pg.sprite.Group()
     horizontal_borders = pg.sprite.Group()
     vertical_borders = pg.sprite.Group()
-    Border(0, 0, width, 0)
-    Border(0, height, width, height)
+    Border(0, 75, width, 75)
+    Border(0, height - 75, width, height - 75)
     Border(0, 0, 0, height)
     Border(width, 0, width, height)
     level = Field(6, 8, lt, rt, lb, rb, '4 corners')
