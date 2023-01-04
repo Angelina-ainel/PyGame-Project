@@ -103,7 +103,20 @@ class Field:
             if (c == 0 and r == 0) or (c == 0 and r == self.height - 1) \
                     or (c == self.width - 1 and r == 0) or (c == self.width - 1 and r == self.height - 1):
                 return True
-            return False
+        elif self.fixed_elems == 'vertical lines':
+            if c == 0 or c == self.width - 1:
+                return True
+        elif self.fixed_elems == 'horizontal lines':
+            if r == 0 or r == self.height - 1:
+                return True
+        elif self.fixed_elems == 'whole frame':
+            if c == 0 or c == self.width - 1 or r == 0 or r == self.height - 1:
+                return True
+        elif self.fixed_elems == 'chess':
+            if (c % 2 == 0 and r % 2 == 0) or (c % 2 and r % 2):
+                return True
+        # для остальных вариантов уровней нужна проверка на нечётность размеров
+        return False
 
     def render(self):
         id = 1
@@ -156,7 +169,7 @@ class Field:
 
 if __name__ == '__main__':
     pg.init()
-    width, height = size = 450, 750
+    width, height = size = 500, 750
     screen = pg.display.set_mode(size)
     lt = np.array((31, 255, 255))
     rt = np.array((90, 255, 106))
@@ -165,12 +178,12 @@ if __name__ == '__main__':
     all_sprites = pg.sprite.Group()
     horizontal_borders = pg.sprite.Group()
     vertical_borders = pg.sprite.Group()
-    Border(0, 75, width, 75)
-    Border(0, height - 75, width, height - 75)
+    Border(0, 50, width, 50)
+    Border(0, height - 50, width, height - 50)
     Border(0, 0, 0, height)
     Border(width, 0, width, height)
-    level = Field(6, 8, lt, rt, lb, rb, '4 corners')
-    level.set_view(0, 75, 75)
+    level = Field(10, 13, lt, rt, lb, rb, 'chess')
+    level.set_view(0, 50, 50)
     running = True
     pushed = False
     level.render()
