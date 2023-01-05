@@ -3,7 +3,8 @@ import numpy as np
 # from PIL import ImageColor
 import random
 
-fixed_elems = ['4 corners', 'whole frame', 'vertical lines', 'horizontal lines']
+
+# fixed_elems = ['4 corners', 'whole frame', 'vertical lines', 'horizontal lines']
 
 
 def condition_to_mix(elem):
@@ -55,14 +56,32 @@ class Element(pg.sprite.Sprite):
                 self.group.add(self)
         if args and args[0].type == pg.MOUSEBUTTONUP:
             if self.pushed:
-                change_places = max((filter(lambda sprite: pg.sprite.collide_mask(self, sprite) and not sprite.fixed
-                                            and sprite != self, self.group)),
-                                    key=lambda s: self.mask.overlap_area(s.mask, (self.rect.x - s.rect.x,
-                                                                                  self.rect.y - s.rect.y)))
-                if self.rect.width * self.rect.height // 2 < self.mask.overlap_area(change_places.mask,
-                                                                                    (self.rect.x - change_places.rect.x,
-                                                                                  self.rect.y - change_places.rect.y)):
-                    self.rect.topleft, change_places.rect.topleft = change_places.rect.topleft, self.pushed_elem_topleft
+                colisions = list(filter(lambda sprite: pg.sprite.collide_mask(self, sprite) and not sprite.fixed
+                                         and sprite != self, self.group))
+                if colisions:
+                    change_places = max(colisions,
+                                        key=lambda s: self.mask.overlap_area(s.mask, (self.rect.x - s.rect.x,
+                                                                                      self.rect.y - s.rect.y)))
+                    if self.rect.width * self.rect.height // 2 < \
+                            self.mask.overlap_area(change_places.mask,
+                                                   (
+                                                           self.rect.x - change_places.rect.x,
+                                                           self.rect.y - change_places.rect.y)):
+                        self.rect.topleft, change_places.rect.topleft = change_places.rect.topleft, \
+                                                                        self.pushed_elem_topleft
+                        self.id, change_places.id = change_places.id, self.id
+                        # self_sprite = self.group.sprites()[self.group.sprites().index(self)]
+                        # pair_sprite = self.group.sprites()[self.group.sprites().index(change_places)]
+                        # self_sprite, pair_sprite = pair_sprite, self_sprite
+                        print([sprite.id for sprite in self.group.sprites()])
+                        self.group.sprites().insert(self.group.sprites().index(change_places), self)
+                        # self.group.sprites()[self.group.sprites().index(self)], \
+                        # self.group.sprites()[self.group.sprites().index(change_places)] = \
+                            # self.group.sprites()[self.group.sprites().index(change_places)], \
+                            # self.group.sprites()[self.group.sprites().index(self)]
+                        print([sprite.id for sprite in self.group.sprites()])
+                    else:
+                        self.rect.topleft = self.pushed_elem_topleft
                 else:
                     self.rect.topleft = self.pushed_elem_topleft
                 self.pushed = False
@@ -88,7 +107,7 @@ class Field:
         self.right_top = color2
         self.left_bottom = color3
         self.right_bottom = color4
-        self.all_elems = pg.sprite.Group()
+        self.sprite_group = pg.sprite.Group()
         self.list_elems = []
         self.fixed_elems = type
         self.mixed = False
@@ -125,13 +144,13 @@ class Field:
         coeff_h_right = np.trunc((self.right_bottom - self.right_top) / (self.height - 1))
         for n in range(self.height * self.width):
             coeff_w = np.trunc(((self.right_top + (coeff_h_right * r)) -
-                       (self.left_top + (coeff_h_left * r))) / (self.width - 1))
+                                (self.left_top + (coeff_h_left * r))) / (self.width - 1))
             if c < self.width:
                 if c == 0 and r != 0:
                     c += 1
                 fixing = self.check_fixing(r, c)
                 color = self.left_top + (coeff_h_left * r) + (coeff_w * c)
-                sprite = Element(r, c, self.top, self.cell_size, color, fixing, id, self.all_elems)
+                sprite = Element(r, c, self.top, self.cell_size, color, fixing, id, self.sprite_group)
                 c += 1
                 id += 1
                 self.list_elems.append(sprite)
@@ -140,31 +159,20 @@ class Field:
                 r += 1
                 fixing = self.check_fixing(r, c)
                 sprite = Element(r, c, self.top, self.cell_size,
-                                 self.left_top + (coeff_h_left * r), fixing, id, self.all_elems)
+                                 self.left_top + (coeff_h_left * r), fixing, id, self.sprite_group)
                 id += 1
                 self.list_elems.append(sprite)
 
     def mix_elements(self):
+        # print([sprite.id for sprite in self.list_elems])
         for i in range(len(self.list_elems)):
             if not self.list_elems[i].mixed and not self.list_elems[i].fixed:
                 pair = random.choice(list(filter(condition_to_mix, self.list_elems)))
                 self.list_elems[i].rect, pair.rect = pair.rect, self.list_elems[i].rect
+                self.list_elems[i].id, pair.id = pair.id, self.list_elems[i].id
                 pair.mixed = True
                 self.list_elems[i].mixed = True
-
-    def get_click(self, mouse_pos):
-        cell = self.get_cell(mouse_pos)
-        self.on_click(cell)
-
-    def get_cell(self, mouse_coord):
-        x, y = mouse_coord
-        r, c = (y - self.top) // self.cell_size, (x - self.left) // self.cell_size
-        if 0 <= r < self.height and 0 <= c < self.width:
-            return r, c
-        return None
-
-    def on_click(self, cell):
-        print(cell)
+        # print([sprite.id for sprite in self.list_elems])
 
 
 if __name__ == '__main__':
@@ -182,19 +190,23 @@ if __name__ == '__main__':
     Border(0, height - 50, width, height - 50)
     Border(0, 0, 0, height)
     Border(width, 0, width, height)
-    level = Field(10, 13, lt, rt, lb, rb, 'chess')
+    level = Field(6, 8, lt, rt, lb, rb, '4 corners')
     level.set_view(0, 50, 50)
     running = True
     pushed = False
     level.render()
     level.mix_elements()
+    # print([sprite.id for sprite in level.sprite_group.sprites()])
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
-            level.all_elems.update(event)
+            level.sprite_group.update(event)
         screen.fill((0, 0, 0))
-        level.all_elems.draw(screen)
-
+        level.sprite_group.draw(screen)
+        if [sprite.id for sprite in level.sprite_group.sprites()] == list(range(1, 6 * 8 + 1)):  # width * height + 1
+            print('Змечательно! вы завершили уровень!')
+            running = False
         pg.display.flip()
+    # print([sprite.id for sprite in level.sprite_group.sprites()])
     pg.quit()
