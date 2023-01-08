@@ -43,7 +43,8 @@ class Element(pg.sprite.Sprite):
         self.id = id
         self.pushed = False
         self.size = cell_size
-        self.group = groups[0]
+        self.group1 = groups[0]
+
         self.pushed_elem_topleft = 0, 0
 
     def update(self, *args):
@@ -52,12 +53,12 @@ class Element(pg.sprite.Sprite):
                     self.rect.y < args[0].pos[1] < self.rect.y + self.size and not self.fixed:
                 self.pushed = True
                 self.pushed_elem_topleft = self.rect.topleft
-                self.group.remove(self)
-                self.group.add(self)
+                self.group1.remove(self)
+                self.group1.add(self)
         if args and args[0].type == pg.MOUSEBUTTONUP:
             if self.pushed:
                 colisions = list(filter(lambda sprite: pg.sprite.collide_mask(self, sprite) and not sprite.fixed
-                                         and sprite != self, self.group))
+                                         and sprite != self, self.group1))
                 if colisions:
                     change_places = max(colisions,
                                         key=lambda s: self.mask.overlap_area(s.mask, (self.rect.x - s.rect.x,
@@ -70,16 +71,6 @@ class Element(pg.sprite.Sprite):
                         self.rect.topleft, change_places.rect.topleft = change_places.rect.topleft, \
                                                                         self.pushed_elem_topleft
                         self.id, change_places.id = change_places.id, self.id
-                        # self_sprite = self.group.sprites()[self.group.sprites().index(self)]
-                        # pair_sprite = self.group.sprites()[self.group.sprites().index(change_places)]
-                        # self_sprite, pair_sprite = pair_sprite, self_sprite
-                        print([sprite.id for sprite in self.group.sprites()])
-                        self.group.sprites().insert(self.group.sprites().index(change_places), self)
-                        # self.group.sprites()[self.group.sprites().index(self)], \
-                        # self.group.sprites()[self.group.sprites().index(change_places)] = \
-                            # self.group.sprites()[self.group.sprites().index(change_places)], \
-                            # self.group.sprites()[self.group.sprites().index(self)]
-                        print([sprite.id for sprite in self.group.sprites()])
                     else:
                         self.rect.topleft = self.pushed_elem_topleft
                 else:
@@ -107,8 +98,8 @@ class Field:
         self.right_top = color2
         self.left_bottom = color3
         self.right_bottom = color4
-        self.sprite_group = pg.sprite.Group()
-        self.list_elems = []
+        self.sprite_group1 = pg.sprite.Group()
+        self.sprite_group2 = pg.sprite.Group()
         self.fixed_elems = type
         self.mixed = False
 
@@ -150,29 +141,27 @@ class Field:
                     c += 1
                 fixing = self.check_fixing(r, c)
                 color = self.left_top + (coeff_h_left * r) + (coeff_w * c)
-                sprite = Element(r, c, self.top, self.cell_size, color, fixing, id, self.sprite_group)
+                sprite = Element(r, c, self.top, self.cell_size, color, fixing, id, self.sprite_group1,
+                                 self.sprite_group2)
                 c += 1
                 id += 1
-                self.list_elems.append(sprite)
             else:
                 c = 0
                 r += 1
                 fixing = self.check_fixing(r, c)
                 sprite = Element(r, c, self.top, self.cell_size,
-                                 self.left_top + (coeff_h_left * r), fixing, id, self.sprite_group)
+                                 self.left_top + (coeff_h_left * r), fixing, id, self.sprite_group1, self.sprite_group2)
                 id += 1
-                self.list_elems.append(sprite)
 
     def mix_elements(self):
-        # print([sprite.id for sprite in self.list_elems])
-        for i in range(len(self.list_elems)):
-            if not self.list_elems[i].mixed and not self.list_elems[i].fixed:
-                pair = random.choice(list(filter(condition_to_mix, self.list_elems)))
-                self.list_elems[i].rect, pair.rect = pair.rect, self.list_elems[i].rect
-                self.list_elems[i].id, pair.id = pair.id, self.list_elems[i].id
+        sprites_list = self.sprite_group1.sprites()
+        for i in range(len(sprites_list)):
+            if not sprites_list[i].mixed and not sprites_list[i].fixed:
+                pair = random.choice(list(filter(condition_to_mix, sprites_list)))
+                sprites_list[i].rect, pair.rect = pair.rect, sprites_list[i].rect
+                sprites_list[i].id, pair.id = pair.id, sprites_list[i].id
                 pair.mixed = True
-                self.list_elems[i].mixed = True
-        # print([sprite.id for sprite in self.list_elems])
+                sprites_list[i].mixed = True
 
 
 if __name__ == '__main__':
@@ -190,7 +179,7 @@ if __name__ == '__main__':
     Border(0, height - 50, width, height - 50)
     Border(0, 0, 0, height)
     Border(width, 0, width, height)
-    level = Field(6, 8, lt, rt, lb, rb, '4 corners')
+    level = Field(10, 13, lt, rt, lb, rb, '4 corners')
     level.set_view(0, 50, 50)
     running = True
     pushed = False
@@ -201,12 +190,11 @@ if __name__ == '__main__':
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
-            level.sprite_group.update(event)
+            level.sprite_group1.update(event)
         screen.fill((0, 0, 0))
-        level.sprite_group.draw(screen)
-        if [sprite.id for sprite in level.sprite_group.sprites()] == list(range(1, 6 * 8 + 1)):  # width * height + 1
+        level.sprite_group1.draw(screen)
+        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 10 * 13 + 1)):  # width * height + 1
             print('Змечательно! вы завершили уровень!')
             running = False
         pg.display.flip()
-    # print([sprite.id for sprite in level.sprite_group.sprites()])
     pg.quit()
