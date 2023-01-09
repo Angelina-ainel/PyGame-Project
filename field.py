@@ -1,6 +1,6 @@
 import pygame as pg
 import numpy as np
-# from PIL import ImageColor
+from PIL import ImageColor
 import random
 
 
@@ -119,7 +119,7 @@ class Field:
         elif self.fixed_elems == 'horizontal lines':
             if r == 0 or r == self.height - 1:
                 return True
-        elif self.fixed_elems == 'whole frame':
+        elif self.fixed_elems == 'frame':
             if c == 0 or c == self.width - 1 or r == 0 or r == self.height - 1:
                 return True
         elif self.fixed_elems == 'chess':
@@ -168,10 +168,10 @@ if __name__ == '__main__':
     pg.init()
     width, height = size = 500, 750
     screen = pg.display.set_mode(size)
-    lt = np.array((31, 255, 255))
-    rt = np.array((90, 255, 106))
-    lb = np.array((255, 118, 233))
-    rb = np.array((255, 250, 63))
+    lt = np.array(ImageColor.getcolor('#F04D89', "RGB"))
+    rt = np.array(ImageColor.getcolor('#7645B6', "RGB"))
+    lb = np.array(ImageColor.getcolor('#E0F64E', "RGB"))
+    rb = np.array(ImageColor.getcolor('#12DCDC', "RGB"))
     all_sprites = pg.sprite.Group()
     horizontal_borders = pg.sprite.Group()
     vertical_borders = pg.sprite.Group()
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     Border(0, height - 50, width, height - 50)
     Border(0, 0, 0, height)
     Border(width, 0, width, height)
-    level = Field(10, 13, lt, rt, lb, rb, '4 corners')
+    level = Field(5, 7, lt, rt, lb, rb, 'frame')
     level.set_view(0, 50, 50)
     running = True
     pushed = False
@@ -193,7 +193,7 @@ if __name__ == '__main__':
             level.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         level.sprite_group1.draw(screen)
-        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 10 * 13 + 1)):  # width * height + 1
+        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 5 * 7 + 1)):  # width * height + 1
             print('Змечательно! вы завершили уровень!')
             running = False
         pg.display.flip()
