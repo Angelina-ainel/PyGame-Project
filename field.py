@@ -125,7 +125,12 @@ class Field:
         elif self.fixed_elems == 'chess':
             if (c % 2 == 0 and r % 2 == 0) or (c % 2 and r % 2):
                 return True
-        # для остальных вариантов уровней нужна проверка на нечётность размеров
+        elif self.fixed_elems == 'through_one':
+            if c % 2 == 0 and r % 2 == 0:
+                return True
+        elif self.fixed_elems == 'only_one':
+            if c == 0 and r == self.height - 1:
+                return True
         return False
 
     def render(self):
@@ -168,10 +173,10 @@ if __name__ == '__main__':
     pg.init()
     width, height = size = 500, 750
     screen = pg.display.set_mode(size)
-    lt = np.array(ImageColor.getcolor('#F04D89', "RGB"))
-    rt = np.array(ImageColor.getcolor('#7645B6', "RGB"))
-    lb = np.array(ImageColor.getcolor('#E0F64E', "RGB"))
-    rb = np.array(ImageColor.getcolor('#12DCDC', "RGB"))
+    lt = np.array(ImageColor.getcolor('#420CA1', "RGB"))
+    rt = np.array(ImageColor.getcolor('#7BB929', "RGB"))
+    lb = np.array(ImageColor.getcolor('#E818D3', "RGB"))
+    rb = np.array(ImageColor.getcolor('#FFD90A', "RGB"))
     all_sprites = pg.sprite.Group()
     horizontal_borders = pg.sprite.Group()
     vertical_borders = pg.sprite.Group()
@@ -179,13 +184,13 @@ if __name__ == '__main__':
     Border(0, height - 50, width, height - 50)
     Border(0, 0, 0, height)
     Border(width, 0, width, height)
-    level = Field(5, 7, lt, rt, lb, rb, 'frame')
+    level = Field(8, 10, lt, rt, lb, rb, 'chess')
     level.set_view(0, 50, 50)
     running = True
     pushed = False
     level.render()
     level.mix_elements()
-    # print([sprite.id for sprite in level.sprite_group.sprites()])
+    print([sprite.id for sprite in level.sprite_group.sprites()])
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -193,7 +198,7 @@ if __name__ == '__main__':
             level.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         level.sprite_group1.draw(screen)
-        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 5 * 7 + 1)):  # width * height + 1
+        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 8 * 10 + 1)):  # width * height + 1
             print('Змечательно! вы завершили уровень!')
             running = False
         pg.display.flip()
