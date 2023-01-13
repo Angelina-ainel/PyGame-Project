@@ -4,26 +4,10 @@ from PIL import ImageColor
 import random
 
 
-# fixed_elems = ['4 corners', 'whole frame', 'vertical lines', 'horizontal lines']
-
-
 def condition_to_mix(elem):
     if not elem.mixed and not elem.fixed:
         return True
     return False
-
-
-class Border(pg.sprite.Sprite):
-    def __init__(self, x1, y1, x2, y2):
-        super().__init__(all_sprites)
-        if x1 == x2:
-            self.add(vertical_borders)
-            self.image = pg.Surface([1, y2 - y1])
-            self.rect = pg.Rect(x1, y1, 1, y2 - y1)
-        else:
-            self.add(horizontal_borders)
-            self.image = pg.Surface([x2 - x1, 1])
-            self.rect = pg.Rect(x1, y1, x2 - x1, 1)
 
 
 class Element(pg.sprite.Sprite):
@@ -79,12 +63,8 @@ class Element(pg.sprite.Sprite):
 
         if args and args[0].type == pg.MOUSEMOTION:
             if self.pushed:
-                if not pg.sprite.spritecollideany(self, horizontal_borders) or \
-                        not pg.sprite.spritecollideany(self, vertical_borders):
-                    dx, dy = args[0].rel
-                    self.rect.topleft = self.rect.x + dx, self.rect.y + dy
-                else:
-                    self.rect.topleft = self.rect.topleft
+                dx, dy = args[0].rel
+                self.rect.topleft = self.rect.x + dx, self.rect.y + dy
 
 
 class Field:
@@ -146,16 +126,16 @@ class Field:
                     c += 1
                 fixing = self.check_fixing(r, c)
                 color = self.left_top + (coeff_h_left * r) + (coeff_w * c)
-                sprite = Element(r, c, self.top, self.cell_size, color, fixing, id, self.sprite_group1,
-                                 self.sprite_group2)
+                Element(r, c, self.top, self.cell_size, color, fixing, id, self.sprite_group1,
+                        self.sprite_group2)
                 c += 1
                 id += 1
             else:
                 c = 0
                 r += 1
                 fixing = self.check_fixing(r, c)
-                sprite = Element(r, c, self.top, self.cell_size,
-                                 self.left_top + (coeff_h_left * r), fixing, id, self.sprite_group1, self.sprite_group2)
+                Element(r, c, self.top, self.cell_size,
+                        self.left_top + (coeff_h_left * r), fixing, id, self.sprite_group1, self.sprite_group2)
                 id += 1
 
     def mix_elements(self):
@@ -171,21 +151,15 @@ class Field:
 
 if __name__ == '__main__':
     pg.init()
-    width, height = size = 600, 850
+    width, height = size = 1000, 750
     screen = pg.display.set_mode(size)
-    lt = np.array(ImageColor.getcolor('#2C65FF', "RGB"))
-    rt = np.array(ImageColor.getcolor('#0DE8FF', "RGB"))
-    lb = np.array(ImageColor.getcolor('#001EDF', "RGB"))
-    rb = np.array(ImageColor.getcolor('#235C95', "RGB"))
+    lt = np.array(ImageColor.getcolor('#F04D89', "RGB"))
+    rt = np.array(ImageColor.getcolor('#7645B6', "RGB"))
+    lb = np.array(ImageColor.getcolor('#E0F64E', "RGB"))
+    rb = np.array(ImageColor.getcolor('#12DCDC', "RGB"))
     all_sprites = pg.sprite.Group()
-    horizontal_borders = pg.sprite.Group()
-    vertical_borders = pg.sprite.Group()
-    Border(0, 50, width, 50)
-    Border(0, height - 50, width, height - 50)
-    Border(0, 0, 0, height)
-    Border(width, 0, width, height)
-    level = Field(11, 15, lt, rt, lb, rb, 'vertical lines')
-    level.set_view(0, 50, 50)
+    level = Field(7, 10, lt, rt, lb, rb, 'chess')
+    level.set_view(0, 0, 75)
     running = True
     pushed = False
     level.render()
@@ -197,7 +171,7 @@ if __name__ == '__main__':
             level.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         level.sprite_group1.draw(screen)
-        # if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 11 * 13 + 1)):  # width * height + 1
+        # if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 5 * 7 + 1)):  # width * height + 1
             # print('Змечательно! вы завершили уровень!')
             # running = False
         pg.display.flip()
