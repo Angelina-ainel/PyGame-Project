@@ -220,7 +220,8 @@ if __name__ == '__main__':
         if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 3 * 3 + 1)):  # width * height + 1
             create_particles((width // 2, height // 3), all_sprites)
             all_sprites.update()
-            # заполнить картинкой уровня
+            image = load_image('beginner_1.jpg')
+            screen.blit(image, (0, 0))
             all_sprites.draw(screen)
             print('Змечательно! вы завершили уровень!')
             running = False
