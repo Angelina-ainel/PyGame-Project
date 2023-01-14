@@ -2,6 +2,8 @@ import pygame as pg
 import numpy as np
 from PIL import ImageColor
 import random
+import os
+import sys
 
 
 def condition_to_mix(elem):
@@ -10,31 +12,38 @@ def condition_to_mix(elem):
     return False
 
 
+pg.init()
+width, height = size = 500, 700
+screen = pg.display.set_mode(size)
+
+
 class Element(pg.sprite.Sprite):
     def __init__(self, row, col, top, cell_size, color, fixed, id, *groups):
         super(Element, self).__init__(*groups)
-        self.image = pg.Surface((cell_size, cell_size))
+        self.width = cell_size[0]
+        self.height = cell_size[1]
+        self.size = cell_size
+        self.image = pg.Surface((self.width, self.height))
         self.rect = self.image.get_rect()
         self.mask = pg.mask.from_surface(self.image)
         self.color = color
         pg.draw.rect(self.image, self.color, self.rect)
         self.fixed = fixed
         if self.fixed:
-            pg.draw.circle(self.image, 'black', self.rect.center, cell_size // 17)
+            pg.draw.circle(self.image, 'black', self.rect.center, self.width // 20)
         self.mixed = False
-        self.rect.x = col * cell_size
-        self.rect.y = top + row * cell_size
+        self.rect.x = col * self.width
+        self.rect.y = top + row * self.height
         self.id = id
         self.pushed = False
-        self.size = cell_size
         self.group1 = groups[0]
 
         self.pushed_elem_topleft = 0, 0
 
     def update(self, *args):
         if args and args[0].type == pg.MOUSEBUTTONDOWN and args[0].button == pg.BUTTON_LEFT:
-            if self.rect.x < args[0].pos[0] < self.rect.x + self.size and \
-                    self.rect.y < args[0].pos[1] < self.rect.y + self.size and not self.fixed:
+            if self.rect.x < args[0].pos[0] < self.rect.x + self.width and \
+                    self.rect.y < args[0].pos[1] < self.rect.y + self.height and not self.fixed:
                 self.pushed = True
                 self.pushed_elem_topleft = self.rect.topleft
                 self.group1.remove(self)
@@ -149,21 +158,58 @@ class Field:
                 sprites_list[i].mixed = True
 
 
+def load_image(name, colorkey=None):
+    fullname = os.path.join('data', name)
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pg.image.load(fullname)
+    return image
+
+
+class Particle(pg.sprite.Sprite):
+    fire = [load_image("star.png")]
+    for scale in (5, 10, 20):
+        fire.append(pg.transform.scale(fire[0], (scale, scale)))
+
+    def __init__(self, pos, dx, dy):
+        super().__init__(all_sprites)
+        self.image = random.choice(self.fire)
+        self.rect = self.image.get_rect()
+        self.velocity = [dx, dy]
+        self.rect.x, self.rect.y = pos
+
+        # гравитация будет одинаковой (значение константы)
+        self.gravity = 0.08
+
+    def update(self):
+        self.velocity[1] += self.gravity
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+        if not self.rect.colliderect((0, 0, width, height)):
+            self.kill()
+
+
+def create_particles(position, group):
+    particle_count = 25
+    numbers = range(-5, 6)
+    for _ in range(particle_count):
+        Particle(position, random.choice(numbers), random.choice(numbers))
+
+
 if __name__ == '__main__':
-    pg.init()
-    width, height = size = 1000, 750
-    screen = pg.display.set_mode(size)
     lt = np.array(ImageColor.getcolor('#F04D89', "RGB"))
     rt = np.array(ImageColor.getcolor('#7645B6', "RGB"))
     lb = np.array(ImageColor.getcolor('#E0F64E', "RGB"))
     rb = np.array(ImageColor.getcolor('#12DCDC', "RGB"))
     all_sprites = pg.sprite.Group()
-    level = Field(7, 10, lt, rt, lb, rb, 'chess')
-    level.set_view(0, 0, 75)
+    stars = pg.sprite.Group()
+    level = Field(5, 7, lt, rt, lb, rb, '4 corners')
+    level.set_view(0, 0, (100, 100))
     running = True
     pushed = False
     level.render()
-    # level.mix_elements()
+    level.mix_elements()
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -171,8 +217,12 @@ if __name__ == '__main__':
             level.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         level.sprite_group1.draw(screen)
-        # if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 5 * 7 + 1)):  # width * height + 1
-            # print('Змечательно! вы завершили уровень!')
-            # running = False
+        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 5 * 7 + 1)):  # width * height + 1
+            create_particles((width // 2, height // 3), all_sprites)
+            all_sprites.update()
+            # заполнить картинкой уровня
+            all_sprites.draw(screen)
+            print('Змечательно! вы завершили уровень!')
+            running = False
         pg.display.flip()
     pg.quit()
