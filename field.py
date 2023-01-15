@@ -168,8 +168,8 @@ def load_image(name, colorkey=None):
 
 
 class Particle(pg.sprite.Sprite):
-    fire = [load_image("star.png")]
-    for scale in (5, 10, 20):
+    fire = [load_image("star2.png")]
+    for scale in (15, 20, 25):
         fire.append(pg.transform.scale(fire[0], (scale, scale)))
 
     def __init__(self, pos, dx, dy):
@@ -191,7 +191,7 @@ class Particle(pg.sprite.Sprite):
 
 
 def create_particles(position, group):
-    particle_count = 25
+    particle_count = 35
     numbers = range(-5, 6)
     for _ in range(particle_count):
         Particle(position, random.choice(numbers), random.choice(numbers))
@@ -204,12 +204,21 @@ if __name__ == '__main__':
     rb = np.array(ImageColor.getcolor('#12DCDC', "RGB"))
     all_sprites = pg.sprite.Group()
     stars = pg.sprite.Group()
-    level = Field(3, 3, lt, rt, lb, rb, '4 corners')
-    level.set_view(0, 0, (50, 50))
+    level = Field(5, 7, lt, rt, lb, rb, '4 corners')
+    level.set_view(0, 0, (100, 100))
     running = True
     pushed = False
     level.render()
-    level.mix_elements()
+    screen2 = pg.Surface(size)
+    level_helping = Field(5, 7, lt, rt, lb, rb, 'no_fixed')
+    level_helping.set_view(0, 0, (100, 100))
+    level_helping.render()
+    level_helping.sprite_group1.draw(screen2)
+    # level.mix_elements()
+
+    fps = 30
+    clock = pg.time.Clock()
+    create_particles((width // 2, height // 6), all_sprites)
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -217,12 +226,13 @@ if __name__ == '__main__':
             level.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         level.sprite_group1.draw(screen)
-        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 3 * 3 + 1)):  # width * height + 1
-            create_particles((width // 2, height // 3), all_sprites)
+        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 5 * 7 + 1)):  # width * height + 1
+
             all_sprites.update()
-            screen.blit(image, (0, 0))
+            screen.blit(screen2, (0, 0))
             all_sprites.draw(screen)
-            print('Змечательно! вы завершили уровень!')
-            running = False
+            # print('Змечательно! вы завершили уровень!')
+            # running = False
+            t = clock.tick(fps)
         pg.display.flip()
     pg.quit()

@@ -153,7 +153,7 @@ class Field:
 
 
 pg.init()
-width, height = size = 300, 400
+width, height = size = 250, 350
 screen = pg.Surface(size)
 con = sqlite3.connect("color_schemes.db")
 query = """SELECT levels.left_top, levels.right_top, levels.left_bottom, levels.right_bottom, levels.size,
@@ -169,7 +169,7 @@ lt = np.array(ImageColor.getcolor(field1[0], "RGB"))
 rt = np.array(ImageColor.getcolor(field1[1], "RGB"))
 lb = np.array(ImageColor.getcolor(field1[2], "RGB"))
 rb = np.array(ImageColor.getcolor(field1[3], "RGB"))
-level = Field(6, 8, lt, rt, lb, rb, field1[5])
+level = Field(5, 7, lt, rt, lb, rb, field1[5])
 level.set_view(0, 0, (50, 50))
 level.render()
 # screen.fill((0, 0, 0))
