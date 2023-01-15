@@ -153,8 +153,8 @@ class Field:
 
 
 pg.init()
-width, height = size = 500, 700
-screen = pg.display.set_mode(size)
+width, height = size = 300, 400
+screen = pg.Surface(size)
 con = sqlite3.connect("color_schemes.db")
 query = """SELECT levels.left_top, levels.right_top, levels.left_bottom, levels.right_bottom, levels.size,
 templates.type, difficulties.difficulty
@@ -165,16 +165,15 @@ result = con.cursor().execute(query).fetchall()
 # print(result)
 field1 = result[0]
 size = list(map(int, field1[4].split('*')))
-print(size)
 lt = np.array(ImageColor.getcolor(field1[0], "RGB"))
 rt = np.array(ImageColor.getcolor(field1[1], "RGB"))
 lb = np.array(ImageColor.getcolor(field1[2], "RGB"))
 rb = np.array(ImageColor.getcolor(field1[3], "RGB"))
-level = Field(3, 3, lt, rt, lb, rb, field1[5])
-level.set_view(0, 0, (100, 100))
+level = Field(6, 8, lt, rt, lb, rb, field1[5])
+level.set_view(0, 0, (50, 50))
 level.render()
-screen.fill((0, 0, 0))
+# screen.fill((0, 0, 0))
 level.sprite_group1.draw(screen)
-pg.display.flip()
-image = pg.transform.scale(screen, (150, 150))
-pg.image.save(screen, 'data/beginner_1.jpg')
+# pg.display.flip()
+image = pg.transform.scale(screen, (300, 450))
+pg.image.save(image, 'data/beginner_1.jpg')
