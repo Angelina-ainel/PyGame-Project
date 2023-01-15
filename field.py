@@ -13,9 +13,9 @@ def condition_to_mix(elem):
 
 
 pg.init()
-width, height = size = 500, 700
+width, height = size = 990, 1000
 screen = pg.display.set_mode(size)
-
+count = 0
 
 class Element(pg.sprite.Sprite):
     def __init__(self, row, col, top, cell_size, color, fixed, id, *groups):
@@ -64,6 +64,8 @@ class Element(pg.sprite.Sprite):
                         self.rect.topleft, change_places.rect.topleft = change_places.rect.topleft, \
                                                                         self.pushed_elem_topleft
                         self.id, change_places.id = change_places.id, self.id
+                        global count
+                        count += 1
                     else:
                         self.rect.topleft = self.pushed_elem_topleft
                 else:
@@ -198,20 +200,20 @@ def create_particles(position, group):
 
 
 if __name__ == '__main__':
-    lt = np.array(ImageColor.getcolor('#F04D89', "RGB"))
-    rt = np.array(ImageColor.getcolor('#7645B6', "RGB"))
-    lb = np.array(ImageColor.getcolor('#E0F64E', "RGB"))
-    rb = np.array(ImageColor.getcolor('#12DCDC', "RGB"))
+    lt = np.array(ImageColor.getcolor('#CEF3F9', "RGB"))
+    rt = np.array(ImageColor.getcolor('#EC4422', "RGB"))
+    lb = np.array(ImageColor.getcolor('#53AFDE', "RGB"))
+    rb = np.array(ImageColor.getcolor('#5B0A6F', "RGB"))
     all_sprites = pg.sprite.Group()
     stars = pg.sprite.Group()
-    level = Field(5, 7, lt, rt, lb, rb, '4 corners')
-    level.set_view(0, 0, (100, 100))
+    level = Field(6, 8, lt, rt, lb, rb, 'chess')
+    level.set_view(0, 0, (80, 90))
     running = True
     pushed = False
     level.render()
     screen2 = pg.Surface(size)
-    level_helping = Field(5, 7, lt, rt, lb, rb, 'no_fixed')
-    level_helping.set_view(0, 0, (100, 100))
+    level_helping = Field(6, 8, lt, rt, lb, rb, 'no_fixed')
+    level_helping.set_view(0, 0, (80, 90))
     level_helping.render()
     level_helping.sprite_group1.draw(screen2)
     # level.mix_elements()
@@ -226,8 +228,7 @@ if __name__ == '__main__':
             level.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         level.sprite_group1.draw(screen)
-        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 5 * 7 + 1)):  # width * height + 1
-
+        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 6 * 8 + 1)):  # width * height + 1
             all_sprites.update()
             screen.blit(screen2, (0, 0))
             all_sprites.draw(screen)
@@ -235,4 +236,6 @@ if __name__ == '__main__':
             # running = False
             t = clock.tick(fps)
         pg.display.flip()
+    print(count)
+    count = 0
     pg.quit()

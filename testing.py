@@ -156,7 +156,7 @@ pg.init()
 width, height = size = 250, 350
 screen = pg.Surface(size)
 con = sqlite3.connect("color_schemes.db")
-query = """SELECT levels.left_top, levels.right_top, levels.left_bottom, levels.right_bottom, levels.size,
+query = """SELECT levels.left_top, levels.right_top, levels.left_bottom, levels.right_bottom, levels.size, 
 templates.type, difficulties.difficulty
 FROM levels INNER JOIN templates ON templates.id = levels.template
 INNER JOIN difficulties ON difficulties.id = levels.difficulty
