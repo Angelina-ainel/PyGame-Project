@@ -64,6 +64,62 @@ class Button:
         print_text(text, x + 10, y + 10, font_size=font_size)
 
 
+class Droplist:
+
+    def __init__(self, x, y, w, h, inactive_color, active_color, font, option_list, selected=0):
+        self.inactive_color = inactive_color
+        self.active_color = active_color
+        self.rect = pygame.Rect(x, y, w, h)
+        self.font = font
+        self.option_list = option_list
+        self.selected = selected
+        self.draw_menu = False
+        self.menu_active = False
+        self.active_option = -1
+
+    def draw(self, surf):
+        pygame.draw.rect(surf, self.active_color if self.menu_active else self.inactive_color, self.rect)
+        pygame.draw.rect(surf, (70, 70, 70), self.rect, 2)
+        btn_text = self.font.render(self.option_list[self.selected], 1, (50, 50, 50))
+        surf.blit(btn_text, btn_text.get_rect(center=self.rect.center))
+
+        if self.draw_menu:
+            for i, text in enumerate(self.option_list):
+                rect = self.rect.copy()
+                rect.y += (i + 1) * self.rect.height
+                pygame.draw.rect(surf, self.active_color if i == self.active_option else self.inactive_color, rect)
+                btn_text = self.font.render(text, 1, (50, 50, 50))
+                surf.blit(btn_text, btn_text.get_rect(center=rect.center))
+            outer_rect = (
+                self.rect.x, self.rect.y + self.rect.height, self.rect.width, self.rect.height * len(self.option_list))
+            pygame.draw.rect(surf, (70, 70, 70), outer_rect, 2)
+
+    def update(self, event_list):
+        m_pos = pygame.mouse.get_pos()
+        self.menu_active = self.rect.collidepoint(m_pos)
+
+        self.active_option = -1
+        for i in range(len(self.option_list)):
+            rect = self.rect.copy()
+            rect.y += (i + 1) * self.rect.height
+            if rect.collidepoint(m_pos):
+                self.active_option = i
+                break
+
+        if not self.menu_active and self.active_option == -1:
+            self.draw_menu = False
+
+        for event in event_list:
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if self.menu_active:
+                    self.draw_menu = not self.draw_menu
+                elif self.draw_menu and self.active_option >= 0:
+                    self.selected = self.active_option
+                    self.draw_menu = False
+                    return self.active_option
+        return -1
+
+
 def terminate():
     pygame.quit()
     sys.exit()
@@ -144,15 +200,22 @@ def levels():
     left = Button(330, 50, (102, 255, 102), (50, 205, 50))
     right = Button(315, 50, (102, 255, 102), (50, 205, 50))
     play = Button(180, 50, (102, 255, 102), (50, 205, 50))
+    list1 = Droplist(
+        800, 20, 160, 40, (102, 255, 102), (50, 205, 50), pygame.font.SysFont('calibri', 30),
+        ['beginner', 'easy', 'medium', 'hard', 'expert'])
 
     while True:
-        events = pygame.event.get()
-        for event in events:
+        event_list = pygame.event.get()
+        for event in event_list:
             if event.type == pygame.QUIT:
                 terminate()
 
-        screen.fill((102, 255, 102))
+        selected_option = list1.update(event_list)
+        if selected_option >= 0:
+            print(selected_option)
 
+        screen.fill((102, 255, 102))
+        list1.draw(screen)
         back.draw(20, 20, '← Назад', select_menu)
         left.draw(20, 650, '<- Предыдущий уровень', font_size=30)
         right.draw(670, 650, 'Следующий уровень ->', font_size=30)
