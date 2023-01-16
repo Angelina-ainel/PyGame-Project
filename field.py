@@ -13,7 +13,7 @@ def condition_to_mix(elem):
 
 
 pg.init()
-width, height = size = 990, 1000
+width, height = size = 450, 700
 screen = pg.display.set_mode(size)
 count = 0
 
@@ -166,11 +166,18 @@ def load_image(name, colorkey=None):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
     image = pg.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
     return image
 
 
 class Particle(pg.sprite.Sprite):
-    fire = [load_image("star2.png")]
+    fire = [load_image("star.png")]
     for scale in (15, 20, 25):
         fire.append(pg.transform.scale(fire[0], (scale, scale)))
 
@@ -181,7 +188,6 @@ class Particle(pg.sprite.Sprite):
         self.velocity = [dx, dy]
         self.rect.x, self.rect.y = pos
 
-        # гравитация будет одинаковой (значение константы)
         self.gravity = 0.08
 
     def update(self):
@@ -194,33 +200,32 @@ class Particle(pg.sprite.Sprite):
 
 def create_particles(position, group):
     particle_count = 35
-    numbers = range(-5, 6)
+    numbers = range(-6, 7)
     for _ in range(particle_count):
         Particle(position, random.choice(numbers), random.choice(numbers))
 
 
 if __name__ == '__main__':
-    lt = np.array(ImageColor.getcolor('#CEF3F9', "RGB"))
-    rt = np.array(ImageColor.getcolor('#EC4422', "RGB"))
-    lb = np.array(ImageColor.getcolor('#53AFDE', "RGB"))
-    rb = np.array(ImageColor.getcolor('#5B0A6F', "RGB"))
+    lt = np.array(ImageColor.getcolor('#FF9C06', "RGB"))
+    rt = np.array(ImageColor.getcolor('#FFE5EC', "RGB"))
+    lb = np.array(ImageColor.getcolor('#488700', "RGB"))
+    rb = np.array(ImageColor.getcolor('#41CFD4', "RGB"))
     all_sprites = pg.sprite.Group()
-    stars = pg.sprite.Group()
-    level = Field(6, 8, lt, rt, lb, rb, 'chess')
-    level.set_view(0, 0, (80, 90))
+    level = Field(5, 7, lt, rt, lb, rb, 'chess')
+    level.set_view(0, 0, (90, 100))
     running = True
-    pushed = False
     level.render()
     screen2 = pg.Surface(size)
-    level_helping = Field(6, 8, lt, rt, lb, rb, 'no_fixed')
-    level_helping.set_view(0, 0, (80, 90))
+    level_helping = Field(5, 7, lt, rt, lb, rb, 'no_fixed')
+    level_helping.set_view(0, 0, (90, 100))
     level_helping.render()
     level_helping.sprite_group1.draw(screen2)
-    # level.mix_elements()
+    level.mix_elements()
 
     fps = 30
     clock = pg.time.Clock()
     create_particles((width // 2, height // 6), all_sprites)
+    time = 0
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -228,14 +233,16 @@ if __name__ == '__main__':
             level.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         level.sprite_group1.draw(screen)
-        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 6 * 8 + 1)):  # width * height + 1
+        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 5 * 7 + 1)):  # width * height + 1
             all_sprites.update()
             screen.blit(screen2, (0, 0))
             all_sprites.draw(screen)
-            # print('Змечательно! вы завершили уровень!')
-            # running = False
             t = clock.tick(fps)
+            if not all_sprites:
+                running = False
         pg.display.flip()
+    print(time)
+    print('Змечательно! вы завершили уровень!')
     print(count)
     count = 0
     pg.quit()

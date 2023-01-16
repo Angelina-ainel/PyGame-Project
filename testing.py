@@ -153,27 +153,24 @@ class Field:
 
 
 pg.init()
-width, height = size = 250, 350
-screen = pg.Surface(size)
-con = sqlite3.connect("color_schemes.db")
-query = """SELECT levels.left_top, levels.right_top, levels.left_bottom, levels.right_bottom, levels.size, 
-templates.type, difficulties.difficulty
+con = sqlite3.connect("color_schemes2.db")
+query = """SELECT levels.id, levels.left_top, levels.right_top, levels.left_bottom, levels.right_bottom, levels.size, 
+levels.cell_size, templates.type, difficulties.difficulty
 FROM levels INNER JOIN templates ON templates.id = levels.template
 INNER JOIN difficulties ON difficulties.id = levels.difficulty
 """
 result = con.cursor().execute(query).fetchall()
-# print(result)
-field1 = result[0]
-size = list(map(int, field1[4].split('*')))
-lt = np.array(ImageColor.getcolor(field1[0], "RGB"))
-rt = np.array(ImageColor.getcolor(field1[1], "RGB"))
-lb = np.array(ImageColor.getcolor(field1[2], "RGB"))
-rb = np.array(ImageColor.getcolor(field1[3], "RGB"))
-level = Field(5, 7, lt, rt, lb, rb, field1[5])
-level.set_view(0, 0, (50, 50))
-level.render()
-# screen.fill((0, 0, 0))
-level.sprite_group1.draw(screen)
-# pg.display.flip()
-image = pg.transform.scale(screen, (300, 450))
-pg.image.save(image, 'data/beginner_1.jpg')
+for level in result:
+    size = list(map(int, level[5].split('*')))
+    cell_size = list(map(int, level[6].split('*')))
+    screen = pg.Surface((size[0] * cell_size[0], size[1] * cell_size[1]))
+    left_top = np.array(ImageColor.getcolor(level[1], "RGB"))
+    right_top = np.array(ImageColor.getcolor(level[2], "RGB"))
+    left_bottom = np.array(ImageColor.getcolor(level[3], "RGB"))
+    right_bottom = np.array(ImageColor.getcolor(level[4], "RGB"))
+    scheme = Field(size[0], size[1], left_top, right_top, left_bottom, right_bottom, level[7])
+    scheme.set_view(0, 0, cell_size)
+    scheme.render()
+    scheme.sprite_group1.draw(screen)
+    image = pg.transform.scale(screen, (300, 450))
+    pg.image.save(image, 'data/' + level[-1] + '_' + str(level[0]) + '.jpg')
