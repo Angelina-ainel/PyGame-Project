@@ -153,7 +153,7 @@ class Field:
 
 
 pg.init()
-con = sqlite3.connect("color_schemes2.db")
+con = sqlite3.connect("color_schemes.db")
 query = """SELECT levels.id, levels.left_top, levels.right_top, levels.left_bottom, levels.right_bottom, levels.size, 
 levels.cell_size, templates.type, difficulties.difficulty
 FROM levels INNER JOIN templates ON templates.id = levels.template

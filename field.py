@@ -13,9 +13,10 @@ def condition_to_mix(elem):
 
 
 pg.init()
-width, height = size = 450, 700
+width, height = size = 490, 720
 screen = pg.display.set_mode(size)
 count = 0
+
 
 class Element(pg.sprite.Sprite):
     def __init__(self, row, col, top, cell_size, color, fixed, id, *groups):
@@ -199,25 +200,25 @@ class Particle(pg.sprite.Sprite):
 
 
 def create_particles(position, group):
-    particle_count = 35
+    particle_count = 30
     numbers = range(-6, 7)
     for _ in range(particle_count):
         Particle(position, random.choice(numbers), random.choice(numbers))
 
 
 if __name__ == '__main__':
-    lt = np.array(ImageColor.getcolor('#FF9C06', "RGB"))
-    rt = np.array(ImageColor.getcolor('#FFE5EC', "RGB"))
-    lb = np.array(ImageColor.getcolor('#488700', "RGB"))
-    rb = np.array(ImageColor.getcolor('#41CFD4', "RGB"))
+    lt = np.array(ImageColor.getcolor('#2C0092', "RGB"))
+    rt = np.array(ImageColor.getcolor('#00CFE6', "RGB"))
+    lb = np.array(ImageColor.getcolor('#EB2300', "RGB"))
+    rb = np.array(ImageColor.getcolor('#FFE600', "RGB"))
     all_sprites = pg.sprite.Group()
-    level = Field(5, 7, lt, rt, lb, rb, 'chess')
-    level.set_view(0, 0, (90, 100))
+    level = Field(5, 7, lt, rt, lb, rb, 'horizontal lines')
+    level.set_view(0, 0, (70, 80))
     running = True
     level.render()
     screen2 = pg.Surface(size)
     level_helping = Field(5, 7, lt, rt, lb, rb, 'no_fixed')
-    level_helping.set_view(0, 0, (90, 100))
+    level_helping.set_view(0, 0, (70, 80))
     level_helping.render()
     level_helping.sprite_group1.draw(screen2)
     level.mix_elements()
