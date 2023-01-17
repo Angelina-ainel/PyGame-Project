@@ -1,18 +1,22 @@
 import sys
-import pygame
+import pygame as pg
 import time
 import os
 import sqlite3
+import numpy as np
+from PIL import ImageColor
+import random
+from field import Field, Element, Particle, condition_to_mix, create_particles
 
-con = sqlite3.connect('color_schemes2 (1).db')
+con = sqlite3.connect('color_schemes.db')
 cur = con.cursor()
 
-pygame.init()
-pygame.display.set_caption('Цветовые гаммы')
+pg.init()
+pg.display.set_caption('Цветовые гаммы')
 size = width, height = 1000, 750
-screen = pygame.display.set_mode(size)
+screen = pg.display.set_mode(size)
 
-t_font = pygame.font.SysFont('calibri', 60)
+t_font = pg.font.SysFont('calibri', 60)
 
 difficulty = {1: 'beginner',
               2: 'easy',
@@ -36,7 +40,7 @@ def load_image(name, colorkey=None):
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
-    image = pygame.image.load(fullname)
+    image = pg.image.load(fullname)
     if colorkey is not None:
         image = image.convert()
         if colorkey == -1:
@@ -53,7 +57,7 @@ def switch_scene(scene):
 
 
 def print_text(text, x, y, font_color=(50, 50, 50), font_type='calibri', font_size=50):
-    font_type = pygame.font.SysFont(font_type, font_size)
+    font_type = pg.font.SysFont(font_type, font_size)
     button_text = font_type.render(text, True, font_color)
     screen.blit(button_text, (x, y))
 
@@ -66,18 +70,18 @@ class Button:
         self.active_color = active_color
 
     def draw(self, x, y, text, action=None, font_size=50):
-        mouse = pygame.mouse.get_pos()
-        click = pygame.mouse.get_pressed()
+        mouse = pg.mouse.get_pos()
+        click = pg.mouse.get_pressed()
 
         if x < mouse[0] < x + self.width and y < mouse[1] < y + self.height:
-            pygame.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
+            pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
 
             if click[0] == 1:  # здесь будет звук нажатия кнопки
                 if action is not None:
                     action()
 
         else:
-            pygame.draw.rect(screen, self.inactive_color, (x, y, self.width, self.height))
+            pg.draw.rect(screen, self.inactive_color, (x, y, self.width, self.height))
 
         print_text(text, x + 10, y + 10, font_size=font_size)
 
@@ -86,7 +90,7 @@ class Droplist:
     def __init__(self, x, y, w, h, inactive_color, active_color, font, option_list, selected=0):
         self.inactive_color = inactive_color
         self.active_color = active_color
-        self.rect = pygame.Rect(x, y, w, h)
+        self.rect = pg.Rect(x, y, w, h)
         self.font = font
         self.option_list = option_list
         self.selected = selected
@@ -95,8 +99,8 @@ class Droplist:
         self.active_option = -1
 
     def draw(self, surf):
-        pygame.draw.rect(surf, self.active_color if self.menu_active else self.inactive_color, self.rect)
-        pygame.draw.rect(surf, (70, 70, 70), self.rect, 2)
+        pg.draw.rect(surf, self.active_color if self.menu_active else self.inactive_color, self.rect)
+        pg.draw.rect(surf, (70, 70, 70), self.rect, 2)
         btn_text = self.font.render(self.option_list[self.selected], 1, (50, 50, 50))
         surf.blit(btn_text, btn_text.get_rect(center=self.rect.center))
 
@@ -104,15 +108,15 @@ class Droplist:
             for i, text in enumerate(self.option_list):
                 rect = self.rect.copy()
                 rect.y += (i + 1) * self.rect.height
-                pygame.draw.rect(surf, self.active_color if i == self.active_option else self.inactive_color, rect)
+                pg.draw.rect(surf, self.active_color if i == self.active_option else self.inactive_color, rect)
                 btn_text = self.font.render(text, 1, (50, 50, 50))
                 surf.blit(btn_text, btn_text.get_rect(center=rect.center))
             outer_rect = (
                 self.rect.x, self.rect.y + self.rect.height, self.rect.width, self.rect.height * len(self.option_list))
-            pygame.draw.rect(surf, (70, 70, 70), outer_rect, 2)
+            pg.draw.rect(surf, (70, 70, 70), outer_rect, 2)
 
     def update(self, event_list):
-        m_pos = pygame.mouse.get_pos()
+        m_pos = pg.mouse.get_pos()
         self.menu_active = self.rect.collidepoint(m_pos)
 
         self.active_option = -1
@@ -127,7 +131,7 @@ class Droplist:
             self.draw_menu = False
 
         for event in event_list:
-            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            if event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 if self.menu_active:
                     self.draw_menu = not self.draw_menu
                 elif self.draw_menu and self.active_option >= 0:
@@ -138,7 +142,7 @@ class Droplist:
 
 
 def terminate():
-    pygame.quit()
+    pg.quit()
     sys.exit()
 
 
@@ -154,6 +158,8 @@ def previous_counter():  # кнопка "Предыдущий уровень" н
     time.sleep(0.25)
 
 
+# def
+
 def menu():
     global t_font
     select_button = Button(470, 65)
@@ -161,9 +167,9 @@ def menu():
     quit_button = Button(320, 65)
 
     while True:
-        events = pygame.event.get()
+        events = pg.event.get()
         for event in events:
-            if event.type == pygame.QUIT:
+            if event.type == pg.QUIT:
                 terminate()
 
         screen.fill((255, 192, 203))
@@ -175,7 +181,7 @@ def menu():
 
         screen.blit(text_surface, (280, 100))
 
-        pygame.display.flip()
+        pg.display.flip()
 
 
 def select_menu():
@@ -186,9 +192,9 @@ def select_menu():
     back = Button(210, 65, (255, 243, 82), (255, 165, 0))
 
     while True:
-        events = pygame.event.get()
+        events = pg.event.get()
         for event in events:
-            if event.type == pygame.QUIT:
+            if event.type == pg.QUIT:
                 terminate()
 
         screen.fill((255, 243, 82))
@@ -197,7 +203,7 @@ def select_menu():
         off_levels.draw(290, 350, 'Выбрать уровень', levels)
         back.draw(20, 20, '← Назад', menu)
 
-        pygame.display.flip()
+        pg.display.flip()
 
 
 def options():
@@ -206,9 +212,9 @@ def options():
     back = Button(210, 65, (42, 247, 237), (0, 150, 255))
 
     while True:
-        events = pygame.event.get()
+        events = pg.event.get()
         for event in events:
-            if event.type == pygame.QUIT:
+            if event.type == pg.QUIT:
                 terminate()
 
         screen.fill((42, 247, 237))
@@ -217,7 +223,7 @@ def options():
         back.draw(20, 20, '← Назад', menu)
 
         screen.blit(text_surface, (350, 30))
-        pygame.display.flip()
+        pg.display.flip()
 
 
 def levels():
@@ -228,13 +234,13 @@ def levels():
     right = Button(315, 50, (102, 255, 102), (50, 205, 50))
     play = Button(180, 50, (102, 255, 102), (50, 205, 50))
     list1 = Droplist(
-        800, 20, 160, 40, (102, 255, 102), (50, 205, 50), pygame.font.SysFont('calibri', 30),
+        800, 20, 160, 40, (102, 255, 102), (50, 205, 50), pg.font.SysFont('calibri', 30),
         ['beginner', 'easy', 'normal', 'hard', 'expert'])
 
     while True:
-        event_list = pygame.event.get()
+        event_list = pg.event.get()
         for event in event_list:
-            if event.type == pygame.QUIT:
+            if event.type == pg.QUIT:
                 terminate()
 
         selected_option = list1.update(event_list) + 1
@@ -306,12 +312,12 @@ def levels():
         w, h = 320, 470
         border = 3
 
-        pygame.draw.rect(screen, (0, 0, 0), (x, y, w, h))
-        pygame.draw.rect(screen, (102, 255, 102), (x + border, y + border, w - border * 2, h - border * 2))
+        pg.draw.rect(screen, (0, 0, 0), (x, y, w, h))
+        pg.draw.rect(screen, (102, 255, 102), (x + border, y + border, w - border * 2, h - border * 2))
 
         screen.blit(image, (360, 150))
 
-        pygame.display.flip()
+        pg.display.flip()
 
 
 switch_scene(menu)
