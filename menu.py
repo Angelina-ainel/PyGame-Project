@@ -2,6 +2,10 @@ import sys
 import pygame
 import time
 import os
+import sqlite3
+
+con = sqlite3.connect('color_schemes2 (1).db')
+cur = con.cursor()
 
 pygame.init()
 pygame.display.set_caption('Цветовые гаммы')
@@ -10,11 +14,25 @@ screen = pygame.display.set_mode(size)
 
 t_font = pygame.font.SysFont('calibri', 60)
 
+difficulty = {1: 'beginner',
+              2: 'easy',
+              3: 'normal',
+              4: 'hard',
+              5: 'expert'}
+first_levels = ['beginner_1.jpg', 'easy_4.jpg', 'normal_7.jpg', 'hard_10.jpg', 'expert_13.jpg']
+current_levels = ['beginner_1.jpg', 'beginner_2.jpg', 'beginner_3.jpg', 'beginner_16.jpg', 'beginner_17.jpg']
+c = 0
+current_level = current_levels[c]
+#
+
+next_count = 0
+previous_count = 0
+
 current_scene = None
 
 
 def load_image(name, colorkey=None):
-    fullname = os.path.join('test_images', name)
+    fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
@@ -65,7 +83,6 @@ class Button:
 
 
 class Droplist:
-
     def __init__(self, x, y, w, h, inactive_color, active_color, font, option_list, selected=0):
         self.inactive_color = inactive_color
         self.active_color = active_color
@@ -123,6 +140,18 @@ class Droplist:
 def terminate():
     pygame.quit()
     sys.exit()
+
+
+def next_counter():  # кнопка "Следующий уровень" нажата
+    global next_count
+    next_count = 1
+    time.sleep(1)
+
+
+def previous_counter():  # кнопка "Предыдущий уровень" нажата
+    global previous_count
+    previous_count = 1
+    time.sleep(1)
 
 
 def menu():
@@ -192,17 +221,15 @@ def options():
 
 
 def levels():
-    time.sleep(0.1)
-    # image = load_image('test_image1.jpg')
-    # image_rect = image.get_rect()
-    global t_font
+    global cur, next_count, previous_count, current_level, current_levels, c
+
     back = Button(210, 65, (102, 255, 102), (50, 205, 50))
     left = Button(330, 50, (102, 255, 102), (50, 205, 50))
     right = Button(315, 50, (102, 255, 102), (50, 205, 50))
     play = Button(180, 50, (102, 255, 102), (50, 205, 50))
     list1 = Droplist(
         800, 20, 160, 40, (102, 255, 102), (50, 205, 50), pygame.font.SysFont('calibri', 30),
-        ['beginner', 'easy', 'medium', 'hard', 'expert'])
+        ['beginner', 'easy', 'normal', 'hard', 'expert'])
 
     while True:
         event_list = pygame.event.get()
@@ -210,17 +237,73 @@ def levels():
             if event.type == pygame.QUIT:
                 terminate()
 
-        selected_option = list1.update(event_list)
-        if selected_option >= 0:
-            print(selected_option)
+        selected_option = list1.update(event_list) + 1
+        query = '''SELECT id FROM levels WHERE difficulty = ?'''
+        res = cur.execute(query, (selected_option,)).fetchall()
+        if selected_option > 0:
+            current_levels = []
+            c = 0
+            next_count = 0
+            previous_count = 0
+            dif_str = difficulty[selected_option]
+            for r in res:
+                result = f'{dif_str}_{str(r[0])}.jpg'
+                current_levels.append(result)
+            current_level = current_levels[c]
+
+        if current_level != current_levels[-1]:
+            if next_count > 0:
+                c += 1
+                current_level = current_levels[c]
+                next_count = 0
+        else:
+            c = len(current_levels) - 1
+        if current_level not in first_levels:
+            if previous_count > 0:
+                c -= 1
+                current_level = current_levels[c]
+                previous_count = 0
 
         screen.fill((102, 255, 102))
         list1.draw(screen)
         back.draw(20, 20, '← Назад', select_menu)
-        left.draw(20, 650, '<- Предыдущий уровень', font_size=30)
-        right.draw(670, 650, 'Следующий уровень ->', font_size=30)
+        left.draw(20, 650, '<- Предыдущий уровень', font_size=30, action=previous_counter)
+        right.draw(670, 650, 'Следующий уровень ->', font_size=30, action=next_counter)
+        right_levels = ['beginner_1.jpg', 'beginner_2.jpg', 'beginner_3.jpg']
+        not_right_levels = ['beginner_16.jpg', 'beginner_17.jpg']
+        es_n_levels = ['easy_4.jpg', 'easy_5.jpg', 'easy_6.jpg', 'normal_7.jpg', 'normal_8.jpg', 'normal_9.jpg']
+        h_ex_levels = ['hard_10.jpg', 'hard_11.jpg', 'hard_12.jpg', 'expert_13.jpg', 'expert_14.jpg', 'expert_15.jpg']
+        if current_level in right_levels:
+            s = current_level.split('.')
+            s = s[0][-1]
+            text_surface = t_font.render(f'Уровень {s}', True, (50, 50, 50))
+            screen.blit(text_surface, (370, 20))
+        elif current_level in not_right_levels:
+            s = current_level.split('.')
+            s = s[0][-2:]
+            text_surface = t_font.render(f'Уровень {int(s) - 12}', True, (50, 50, 50))
+            screen.blit(text_surface, (370, 20))
+        elif current_level in es_n_levels:
+            s = current_level.split('.')
+            s = s[0][-1]
+            text_surface = t_font.render(f'Уровень {int(s) + 2}', True, (50, 50, 50))
+            screen.blit(text_surface, (370, 20))
+        else:
+            s = current_level.split('.')
+            s = s[0][-2:]
+            text_surface = t_font.render(f'Уровень {int(s) + 2}', True, (50, 50, 50))
+            screen.blit(text_surface, (370, 20))
         play.draw(420, 650, '     Играть', font_size=30)
-        # pygame.draw.rect(screen, rect=image_rect, )
+        image = load_image(current_level)
+
+        x, y = 350, 140
+        w, h = 320, 470
+        border = 3
+
+        pygame.draw.rect(screen, (0, 0, 0), (x, y, w, h))
+        pygame.draw.rect(screen, (102, 255, 102), (x + border, y + border, w - border * 2, h - border * 2))
+
+        screen.blit(image, (360, 150))
 
         pygame.display.flip()
 
