@@ -27,7 +27,9 @@ first_levels = ['beginner_1.jpg', 'easy_4.jpg', 'normal_7.jpg', 'hard_10.jpg', '
 current_levels = ['beginner_1.jpg', 'beginner_2.jpg', 'beginner_3.jpg', 'beginner_16.jpg', 'beginner_17.jpg']
 c = 0
 current_level = current_levels[c]
-#
+
+
+count_moves = 0
 
 next_count = 0
 previous_count = 0
@@ -158,7 +160,60 @@ def previous_counter():  # кнопка "Предыдущий уровень" н
     time.sleep(0.25)
 
 
-# def
+def game():
+    query = '''SELECT levels.left_top, levels.right_top, levels.left_bottom, levels.right_bottom, levels.size, 
+levels.cell_size, templates.type, difficulties.difficulty
+FROM levels INNER JOIN templates ON templates.id = levels.template
+INNER JOIN difficulties ON difficulties.id = levels.difficulty
+WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty = ?) AND levels.id = ?'''
+    pg.init()
+    difficulty, id = current_level[:-4].split('_')
+    res = cur.execute(query, (difficulty, int(id))).fetchone()
+    all_sprites = pg.sprite.Group()
+    field_size = tuple(map(int, res[4].split('*')))
+    cell_size = tuple(map(lambda x: int(x) * 2, res[5].split('*')))
+    print(cell_size)
+    w, h = screen_size = cell_size[0] * field_size[0], cell_size[1] * field_size[1]
+    playing_screen = pg.display.set_mode(screen_size)
+    left_top = np.array(ImageColor.getcolor(res[0], "RGB"))
+    right_top = np.array(ImageColor.getcolor(res[1], "RGB"))
+    left_bottom = np.array(ImageColor.getcolor(res[2], "RGB"))
+    right_bottom = np.array(ImageColor.getcolor(res[3], "RGB"))
+    scheme = Field(*field_size, left_top, right_top, left_bottom, right_bottom, res[6])
+    scheme.set_view(0, 0, cell_size)
+    scheme.render()
+    screen2 = pg.Surface(size)
+    scheme_helping = Field(*field_size, left_top, right_top, left_bottom, right_bottom,'no_fixed')
+    scheme.set_view(0, 0, cell_size)
+    scheme_helping.render()
+    scheme_helping.sprite_group1.draw(screen2)
+    scheme.mix_elements()
+    fps = 30
+    clock = pg.time.Clock()
+    create_particles((width // 2, height // 6), all_sprites)
+    running = True
+    while running:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                switch_scene(levels)
+                # running = False
+            scheme.sprite_group1.update(event)
+        playing_screen.fill((0, 0, 0))
+        scheme.sprite_group1.draw(playing_screen)
+        if [sprite.id for sprite in scheme.sprite_group2.sprites()] == \
+                list(range(1, field_size[0] * field_size[1] + 1)):  # width * height + 1
+            all_sprites.update()
+            playing_screen.blit(screen2, (0, 0))
+            all_sprites.draw(playing_screen)
+            t = clock.tick(fps)
+            if not all_sprites:
+                print('Вы прошли уровень!')
+                switch_scene(levels)
+                # running = False
+                # тут должен появляться результат пользователя(count_moves) и поощрительные слова
+        pg.display.flip()
+    # print(count_moves)
+
 
 def menu():
     global t_font
@@ -305,7 +360,7 @@ def levels():
             s = s[0][-2:]
             text_surface = t_font.render(f'Уровень {int(s) + 2}', True, (50, 50, 50))
             screen.blit(text_surface, (370, 20))
-        play.draw(420, 650, '     Играть', font_size=30)
+        play.draw(420, 650, '     Играть', game, font_size=30)
         image = load_image(current_level)
 
         x, y = 350, 140

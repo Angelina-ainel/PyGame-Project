@@ -15,7 +15,7 @@ def condition_to_mix(elem):
 pg.init()
 width, height = size = 490, 720
 screen = pg.display.set_mode(size)
-count = 0
+count_moves = 0
 
 
 class Element(pg.sprite.Sprite):
@@ -65,8 +65,8 @@ class Element(pg.sprite.Sprite):
                         self.rect.topleft, change_places.rect.topleft = change_places.rect.topleft, \
                                                                         self.pushed_elem_topleft
                         self.id, change_places.id = change_places.id, self.id
-                        global count
-                        count += 1
+                        global count_moves
+                        count_moves  += 1
                     else:
                         self.rect.topleft = self.pushed_elem_topleft
                 else:
@@ -84,8 +84,8 @@ class Field:
         self.width = width
         self.height = height
         self.left = 0
-        self.top = 75
-        self.cell_size = 75
+        self.top = 0
+        self.cell_size = 55, 60
         self.left_top = color1
         self.right_top = color2
         self.left_bottom = color3
@@ -182,8 +182,8 @@ class Particle(pg.sprite.Sprite):
     for scale in (15, 20, 25):
         fire.append(pg.transform.scale(fire[0], (scale, scale)))
 
-    def __init__(self, pos, dx, dy):
-        super().__init__(all_sprites)
+    def __init__(self, pos, dx, dy, group):
+        super().__init__(group)
         self.image = random.choice(self.fire)
         self.rect = self.image.get_rect()
         self.velocity = [dx, dy]
@@ -203,7 +203,7 @@ def create_particles(position, group):
     particle_count = 30
     numbers = range(-6, 7)
     for _ in range(particle_count):
-        Particle(position, random.choice(numbers), random.choice(numbers))
+        Particle(position, random.choice(numbers), random.choice(numbers), group)
 
 
 if __name__ == '__main__':
@@ -226,7 +226,6 @@ if __name__ == '__main__':
     fps = 30
     clock = pg.time.Clock()
     create_particles((width // 2, height // 6), all_sprites)
-    time = 0
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -242,8 +241,7 @@ if __name__ == '__main__':
             if not all_sprites:
                 running = False
         pg.display.flip()
-    print(time)
     print('Змечательно! вы завершили уровень!')
-    print(count)
+    print(count_moves)
     count = 0
     pg.quit()
