@@ -145,13 +145,13 @@ def terminate():
 def next_counter():  # кнопка "Следующий уровень" нажата
     global next_count
     next_count = 1
-    time.sleep(1)
+    time.sleep(0.25)
 
 
 def previous_counter():  # кнопка "Предыдущий уровень" нажата
     global previous_count
     previous_count = 1
-    time.sleep(1)
+    time.sleep(0.25)
 
 
 def menu():
@@ -250,19 +250,25 @@ def levels():
                 result = f'{dif_str}_{str(r[0])}.jpg'
                 current_levels.append(result)
             current_level = current_levels[c]
-
-        if current_level != current_levels[-1]:
-            if next_count > 0:
-                c += 1
-                current_level = current_levels[c]
-                next_count = 0
-        else:
+        if current_level != current_levels[-1] and next_count > 0:
+            c += 1
+            current_level = current_levels[c]
+            next_count = 0
+        elif current_level == current_levels[-1] and next_count > 0:
             c = len(current_levels) - 1
-        if current_level not in first_levels:
-            if previous_count > 0:
-                c -= 1
-                current_level = current_levels[c]
-                previous_count = 0
+            next_count = 0
+        flag = False
+        for c_l in first_levels:
+            if current_level == c_l:
+                flag = True
+        if flag and previous_count > 0:
+            c = 0
+            previous_count = 0
+            flag = False
+        elif not flag and previous_count > 0:
+            c -= 1
+            current_level = current_levels[c]
+            previous_count = 0
 
         screen.fill((102, 255, 102))
         list1.draw(screen)
