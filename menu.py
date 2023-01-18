@@ -259,6 +259,7 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
                 screen = pg.display.set_mode(size) # это убрать здесь
                 switch_scene(levels) #
                 levels() #
+                print(count_moves)
                 # вот здесь должен появляться результат пользователя(count_moves) и поощрительные слова,
                 # а потом при нажатии на какую-нибудь кнопку назад возврашение на levels
         pg.display.flip()
