@@ -16,7 +16,8 @@ pg.display.set_caption('Цветовые гаммы')
 size = width, height = 1000, 750
 screen = pg.display.set_mode(size)
 
-t_font = pg.font.SysFont('calibri', 60)
+c_font = 'calibri'
+up_font = pg.font.SysFont(c_font, 60)
 
 difficulty = {1: 'beginner',
               2: 'easy',
@@ -27,7 +28,6 @@ first_levels = ['beginner_1.jpg', 'easy_4.jpg', 'normal_7.jpg', 'hard_10.jpg', '
 current_levels = ['beginner_1.jpg', 'beginner_2.jpg', 'beginner_3.jpg', 'beginner_16.jpg', 'beginner_17.jpg']
 c = 0
 current_level = current_levels[c]
-
 
 count_moves = 0
 
@@ -58,7 +58,7 @@ def switch_scene(scene):
     current_scene = scene
 
 
-def print_text(text, x, y, font_color=(50, 50, 50), font_type='calibri', font_size=50):
+def print_text(text, x, y, font_color=(50, 50, 50), font_type=c_font, font_size=50):
     font_type = pg.font.SysFont(font_type, font_size)
     button_text = font_type.render(text, True, font_color)
     screen.blit(button_text, (x, y))
@@ -143,18 +143,61 @@ class Droplist:
         return -1
 
 
+COLOR_INACTIVE_S_U = pg.Color((204, 102, 0))
+COLOR_ACTIVE_S_U = pg.Color((70, 70, 70))
+FONT = pg.font.SysFont(c_font, 32)
+
+
+class InputBox:
+
+    def __init__(self, x, y, w, h, text=''):
+        self.rect = pg.Rect(x, y, w, h)
+        self.color = COLOR_INACTIVE_S_U
+        self.text = text
+        self.txt_surface = FONT.render(text, True, self.color)
+        self.active = False
+
+    def handle_event(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                self.active = not self.active
+            else:
+                self.active = False
+            self.color = COLOR_ACTIVE_S_U if self.active else COLOR_INACTIVE_S_U
+        if event.type == pg.KEYDOWN:
+            if self.active:
+                if event.key == pg.K_RETURN:
+                    print(self.text)
+                    self.text = ''
+                elif event.key == pg.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    self.text += event.unicode
+                self.txt_surface = FONT.render(self.text, True, self.color)
+
+    def update(self):
+        width = max(200, self.txt_surface.get_width() + 10)
+        self.rect.w = width
+
+    def draw(self, screen):
+        # Blit the text.
+        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        # Blit the rect.
+        pg.draw.rect(screen, self.color, self.rect, 2)
+
+
 def terminate():
     pg.quit()
     sys.exit()
 
 
-def next_counter():  # кнопка "Следующий уровень" нажата
+def next_counter():
     global next_count
     next_count = 1
     time.sleep(0.25)
 
 
-def previous_counter():  # кнопка "Предыдущий уровень" нажата
+def previous_counter():
     global previous_count
     previous_count = 1
     time.sleep(0.25)
@@ -183,7 +226,7 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
     scheme.set_view(0, 0, cell_size)
     scheme.render()
     screen2 = pg.Surface(size)
-    scheme_helping = Field(*field_size, left_top, right_top, left_bottom, right_bottom,'no_fixed')
+    scheme_helping = Field(*field_size, left_top, right_top, left_bottom, right_bottom, 'no_fixed')
     scheme.set_view(0, 0, cell_size)
     scheme_helping.render()
     scheme_helping.sprite_group1.draw(screen2)
@@ -216,7 +259,6 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
 
 
 def menu():
-    global t_font
     select_button = Button(470, 65)
     option_button = Button(240, 65)
     quit_button = Button(320, 65)
@@ -229,19 +271,18 @@ def menu():
 
         screen.fill((255, 192, 203))
 
-        text_surface = t_font.render('Цветовые гаммы', True, (50, 50, 50))
+        up_text = up_font.render('Цветовые гаммы', True, (50, 50, 50))
         select_button.draw(270, 300, 'Выбрать режим игры', select_menu)
         option_button.draw(370, 400, 'Настройки', options)
         quit_button.draw(335, 500, 'Выйти из игры', terminate)
 
-        screen.blit(text_surface, (280, 100))
+        screen.blit(up_text, (283, 100))
 
         pg.display.flip()
 
 
 def select_menu():
     time.sleep(0.1)
-    global t_font
     user_options = Button(660, 65, (255, 243, 82), (255, 165, 0))
     off_levels = Button(380, 65, (255, 243, 82), (255, 165, 0))
     back = Button(210, 65, (255, 243, 82), (255, 165, 0))
@@ -254,16 +295,88 @@ def select_menu():
 
         screen.fill((255, 243, 82))
 
-        user_options.draw(170, 250, 'Задать свои настройки уровня')
+        user_options.draw(170, 250, 'Задать свои настройки уровня', user_level)
         off_levels.draw(290, 350, 'Выбрать уровень', levels)
         back.draw(20, 20, '← Назад', menu)
 
         pg.display.flip()
 
 
+def user_level():
+    time.sleep(0.1)
+    global up_font, c_font
+    down_font = pg.font.SysFont(c_font, 30)
+    cell_size_text = down_font.render('Размер клетки', True, (50, 50, 50))
+    cell_size_text1 = down_font.render('в пикселях:', True, (50, 50, 50))
+    input_box1 = InputBox(60, 180, 50, 32)
+    input_box2 = InputBox(60, 235, 50, 32)
+    x_text = down_font.render('x =', True, (50, 50, 50))
+    y_text = down_font.render('y =', True, (50, 50, 50))
+
+    back = Button(210, 65, (255, 168, 18), (204, 102, 0))
+
+    field_size_text = down_font.render('Размер поля', True, (50, 50, 50))
+    field_size_text1 = down_font.render('в клетках:', True, (50, 50, 50))
+    input_box3 = InputBox(390, 180, 50, 32)
+    input_box4 = InputBox(390, 235, 50, 32)
+    input_boxes = [input_box1, input_box2, input_box3, input_box4]
+    x_text1 = down_font.render('x =', True, (50, 50, 50))
+    y_text1 = down_font.render('y =', True, (50, 50, 50))
+
+    drop_list_text = down_font.render('Выберите шаблон поля:', True, (50, 50, 50))
+    query = '''SELECT type FROM templates'''
+    res = cur.execute(query).fetchall()
+    templates_list = []
+    for r in res:
+        r = r[0]
+        templates_list.append(r)
+    drop_list = Droplist(
+            700, 145, 210, 40, (255, 168, 18), COLOR_INACTIVE_S_U, pg.font.SysFont(c_font, 30),
+            templates_list)
+    clock = pg.time.Clock()
+    while True:
+        events = pg.event.get()
+        for event in events:
+            if event.type == pg.QUIT:
+                terminate()
+
+            for box in input_boxes:
+                box.handle_event(event)
+        selected_option = drop_list.update(events)
+        if selected_option >= 0:
+            print(templates_list[selected_option])
+
+        for box in input_boxes:
+            box.update()
+
+        screen.fill((255, 168, 18))
+
+        for box in input_boxes:
+            box.draw(screen)
+        up_text = up_font.render('Создайте свой уровень', True, (50, 50, 50))
+        back.draw(20, 20, '← Назад', select_menu)
+        screen.blit(cell_size_text, (60, 100))
+        screen.blit(cell_size_text1, (80, 130))
+        screen.blit(x_text, (20, 180))
+        screen.blit(y_text, (20, 235))
+
+        drop_list.draw(screen)
+        screen.blit(drop_list_text, (650, 100))
+
+        screen.blit(up_text, (250, 25))
+
+        screen.blit(field_size_text, (400, 100))
+        screen.blit(field_size_text1, (420, 130))
+        screen.blit(x_text1, (350, 180))
+        screen.blit(y_text1, (350, 235))
+
+        pg.display.flip()
+        clock.tick(30)
+
+
 def options():
     time.sleep(0.1)
-    global t_font
+    global up_font
     back = Button(210, 65, (42, 247, 237), (0, 150, 255))
 
     while True:
@@ -274,7 +387,7 @@ def options():
 
         screen.fill((42, 247, 237))
 
-        text_surface = t_font.render('Настройки', True, (50, 50, 50))
+        text_surface = up_font.render('Настройки', True, (50, 50, 50))
         back.draw(20, 20, '← Назад', menu)
 
         screen.blit(text_surface, (350, 30))
@@ -289,7 +402,7 @@ def levels():
     right = Button(315, 50, (102, 255, 102), (50, 205, 50))
     play = Button(180, 50, (102, 255, 102), (50, 205, 50))
     list1 = Droplist(
-        800, 20, 160, 40, (102, 255, 102), (50, 205, 50), pg.font.SysFont('calibri', 30),
+        800, 20, 160, 40, (102, 255, 102), (50, 205, 50), pg.font.SysFont(c_font, 30),
         ['beginner', 'easy', 'normal', 'hard', 'expert'])
 
     while True:
@@ -337,29 +450,28 @@ def levels():
         left.draw(20, 650, '<- Предыдущий уровень', font_size=30, action=previous_counter)
         right.draw(670, 650, 'Следующий уровень ->', font_size=30, action=next_counter)
         right_levels = ['beginner_1.jpg', 'beginner_2.jpg', 'beginner_3.jpg']
-        not_right_levels = ['beginner_16.jpg', 'beginner_17.jpg']
+        not_right_levels = ['beginner_16.jpg', 'beginner_17.jpg', 'beginner_18.jpg', 'beginner_19.jpg']
         es_n_levels = ['easy_4.jpg', 'easy_5.jpg', 'easy_6.jpg', 'normal_7.jpg', 'normal_8.jpg', 'normal_9.jpg']
-        h_ex_levels = ['hard_10.jpg', 'hard_11.jpg', 'hard_12.jpg', 'expert_13.jpg', 'expert_14.jpg', 'expert_15.jpg']
         if current_level in right_levels:
             s = current_level.split('.')
             s = s[0][-1]
-            text_surface = t_font.render(f'Уровень {s}', True, (50, 50, 50))
-            screen.blit(text_surface, (370, 20))
+            text_surface = up_font.render(f'Уровень {s}', True, (50, 50, 50))
+            screen.blit(text_surface, (375, 20))
         elif current_level in not_right_levels:
             s = current_level.split('.')
             s = s[0][-2:]
-            text_surface = t_font.render(f'Уровень {int(s) - 12}', True, (50, 50, 50))
-            screen.blit(text_surface, (370, 20))
+            text_surface = up_font.render(f'Уровень {int(s) - 12}', True, (50, 50, 50))
+            screen.blit(text_surface, (375, 20))
         elif current_level in es_n_levels:
             s = current_level.split('.')
             s = s[0][-1]
-            text_surface = t_font.render(f'Уровень {int(s) + 2}', True, (50, 50, 50))
-            screen.blit(text_surface, (370, 20))
+            text_surface = up_font.render(f'Уровень {int(s) + 4}', True, (50, 50, 50))
+            screen.blit(text_surface, (375, 20))
         else:
             s = current_level.split('.')
             s = s[0][-2:]
-            text_surface = t_font.render(f'Уровень {int(s) + 2}', True, (50, 50, 50))
-            screen.blit(text_surface, (370, 20))
+            text_surface = up_font.render(f'Уровень {int(s) + 4}', True, (50, 50, 50))
+            screen.blit(text_surface, (375, 20))
         play.draw(420, 650, '     Играть', game, font_size=30)
         image = load_image(current_level)
 
