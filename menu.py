@@ -88,6 +88,9 @@ class Button:
         print_text(text, x + 10, y + 10, font_size=font_size)
 
 
+# class ColorButton(Button):
+
+
 class Droplist:
     def __init__(self, x, y, w, h, inactive_color, active_color, font, option_list, selected=0):
         self.inactive_color = inactive_color
@@ -290,7 +293,7 @@ def menu():
 
 
 def select_menu():
-    time.sleep(0.1)
+    time.sleep(0.25)
     user_options = Button(660, 65, (255, 243, 82), (255, 165, 0))
     off_levels = Button(380, 65, (255, 243, 82), (255, 165, 0))
     back = Button(210, 65, (255, 243, 82), (255, 165, 0))
@@ -311,25 +314,19 @@ def select_menu():
 
 
 def user_level():
-    time.sleep(0.1)
+    time.sleep(0.25)
     global up_font, c_font
     down_font = pg.font.SysFont(c_font, 30)
-    cell_size_text = down_font.render('Размер клетки', True, (50, 50, 50))
-    cell_size_text1 = down_font.render('в пикселях:', True, (50, 50, 50))
-    input_box1 = InputBox(60, 180, 50, 32)
-    input_box2 = InputBox(60, 235, 50, 32)
-    x_text = down_font.render('x =', True, (50, 50, 50))
-    y_text = down_font.render('y =', True, (50, 50, 50))
 
     back = Button(210, 65, (255, 168, 18), (204, 102, 0))
 
     field_size_text = down_font.render('Размер поля', True, (50, 50, 50))
     field_size_text1 = down_font.render('в клетках:', True, (50, 50, 50))
-    input_box3 = InputBox(390, 180, 50, 32)
-    input_box4 = InputBox(390, 235, 50, 32)
-    input_boxes = [input_box1, input_box2, input_box3, input_box4]
-    x_text1 = down_font.render('x =', True, (50, 50, 50))
-    y_text1 = down_font.render('y =', True, (50, 50, 50))
+    input_box1 = InputBox(170, 180, 50, 32)
+    input_box2 = InputBox(170, 235, 50, 32)
+    input_boxes = [input_box1, input_box2]
+    w_text = down_font.render('Ширина =', True, (50, 50, 50))
+    h_text = down_font.render('Высота =', True, (50, 50, 50))
 
     drop_list_text = down_font.render('Выберите шаблон поля:', True, (50, 50, 50))
     query = '''SELECT type FROM templates'''
@@ -339,7 +336,7 @@ def user_level():
         r = r[0]
         templates_list.append(r)
     drop_list = Droplist(
-        700, 145, 210, 40, (255, 168, 18), COLOR_INACTIVE_S_U, pg.font.SysFont(c_font, 30),
+        70, 350, 210, 40, (255, 168, 18), COLOR_INACTIVE_S_U, pg.font.SysFont(c_font, 30),
         templates_list)
     clock = pg.time.Clock()
     while True:
@@ -363,27 +360,23 @@ def user_level():
             box.draw(screen)
         up_text = up_font.render('Создайте свой уровень', True, (50, 50, 50))
         back.draw(20, 20, '← Назад', select_menu)
-        screen.blit(cell_size_text, (60, 100))
-        screen.blit(cell_size_text1, (80, 130))
-        screen.blit(x_text, (20, 180))
-        screen.blit(y_text, (20, 235))
 
         drop_list.draw(screen)
-        screen.blit(drop_list_text, (650, 100))
+        screen.blit(drop_list_text, (30, 300))
 
         screen.blit(up_text, (250, 25))
 
-        screen.blit(field_size_text, (400, 100))
-        screen.blit(field_size_text1, (420, 130))
-        screen.blit(x_text1, (350, 180))
-        screen.blit(y_text1, (350, 235))
+        screen.blit(field_size_text, (100, 100))
+        screen.blit(field_size_text1, (110, 130))
+        screen.blit(w_text, (30, 180))
+        screen.blit(h_text, (30, 235))
 
         pg.display.flip()
         clock.tick(30)
 
 
 def options():
-    time.sleep(0.1)
+    time.sleep(0.25)
     global up_font
     back = Button(210, 65, (42, 247, 237), (0, 150, 255))
 
@@ -403,15 +396,22 @@ def options():
 
 
 def levels():
+    time.sleep(0.25)
     global cur, next_count, previous_count, current_level, current_levels, c, screen
     screen = pg.display.set_mode(size)
     back = Button(210, 65, (102, 255, 102), (50, 205, 50))
     left = Button(330, 50, (102, 255, 102), (50, 205, 50))
     right = Button(315, 50, (102, 255, 102), (50, 205, 50))
     play = Button(180, 50, (102, 255, 102), (50, 205, 50))
+    query = '''SELECT difficulty FROM difficulties'''
+    res = cur.execute(query).fetchall()
+    templates_list = []
+    for r in res:
+        r = r[0]
+        templates_list.append(r)
     list1 = Droplist(
         800, 20, 160, 40, (102, 255, 102), (50, 205, 50), pg.font.SysFont(c_font, 30),
-        ['beginner', 'easy', 'normal', 'hard', 'expert'])
+        templates_list)
 
     while True:
         event_list = pg.event.get()
