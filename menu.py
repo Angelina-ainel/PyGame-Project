@@ -331,8 +331,8 @@ def user_level():
         r = r[0]
         templates_list.append(r)
     drop_list = Droplist(
-            700, 145, 210, 40, (255, 168, 18), COLOR_INACTIVE_S_U, pg.font.SysFont(c_font, 30),
-            templates_list)
+        700, 145, 210, 40, (255, 168, 18), COLOR_INACTIVE_S_U, pg.font.SysFont(c_font, 30),
+        templates_list)
     clock = pg.time.Clock()
     while True:
         events = pg.event.get()
