@@ -18,6 +18,9 @@ screen = pg.display.set_mode(size)
 
 c_font = 'calibri'
 up_font = pg.font.SysFont(c_font, 60)
+down_font = pg.font.SysFont(c_font, 30)
+
+select_color = down_font.render('✓', True, (50, 50, 50))
 
 difficulty = {1: 'beginner',
               2: 'easy',
@@ -88,7 +91,40 @@ class Button:
         print_text(text, x + 10, y + 10, font_size=font_size)
 
 
-# class ColorButton(Button):
+class ColorButton(Button):
+    def __init__(self, width, height, inactive_color, active_color):
+        super().__init__(width, height, inactive_color, active_color)
+        self.width = width
+        self.height = height
+        self.inactive_color = inactive_color
+        self.active_color = active_color
+
+    def draw(self, x, y, text, action=None, font_size=50):
+        mouse = pg.mouse.get_pos()
+        click = pg.mouse.get_pressed()
+        global color_list, down_font, select_color
+
+        if x < mouse[0] < x + self.width and y < mouse[1] < y + self.height and click[0] == 1:
+            pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
+            if len(color_list) < 3:
+                print(len(color_list))
+                color_list.append(self.active_color)
+                print(color_list)
+                time.sleep(0.3)
+
+            else:
+                for i in color_list:
+                    break
+                color_list.remove(i)
+                color_list.append(self.active_color)
+                print(color_list)
+                time.sleep(0.3)
+
+        else:
+            pg.draw.rect(screen, self.inactive_color, (x, y, self.width, self.height))
+
+
+color_list = []
 
 
 class Droplist:
@@ -259,9 +295,9 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
             all_sprites.draw(screen)
             clock.tick(fps)
             if not all_sprites:
-                screen = pg.display.set_mode(size) # это убрать здесь
-                switch_scene(levels) #
-                levels() #
+                screen = pg.display.set_mode(size)  # это убрать здесь
+                switch_scene(levels)  #
+                levels()  #
                 # вот здесь должен появляться результат пользователя(count_moves) и поощрительные слова,
                 # а потом при нажатии на какую-нибудь кнопку назад возврашение на levels
         pg.display.flip()
@@ -314,8 +350,7 @@ def select_menu():
 
 def user_level():
     time.sleep(0.25)
-    global up_font, c_font
-    down_font = pg.font.SysFont(c_font, 30)
+    global up_font, c_font, down_font, select_color
 
     back = Button(210, 65, (255, 168, 18), (204, 102, 0))
 
@@ -335,8 +370,21 @@ def user_level():
         r = r[0]
         templates_list.append(r)
     drop_list = Droplist(
-        70, 350, 210, 40, (255, 168, 18), COLOR_INACTIVE_S_U, pg.font.SysFont(c_font, 30),
+        440, 150, 210, 40, (255, 168, 18), COLOR_INACTIVE_S_U, pg.font.SysFont(c_font, 30),
         templates_list)
+
+    select_color_text = down_font.render('Выберите 4 цвета:', True, (50, 50, 50))
+    red_button = ColorButton(70, 70, (255, 0, 0), (255, 0, 0))
+    yellow_button = ColorButton(70, 70, (255, 255, 0), (255, 255, 0))
+    dark_blue_button = ColorButton(70, 70, (0, 0, 255), (0, 0, 255))
+    blue_button = ColorButton(70, 70, (15, 147, 255), (15, 147, 255))
+    green_button = ColorButton(70, 70, (0, 128, 0), (0, 128, 0))
+    pink_button = ColorButton(70, 70, (255, 92, 119), (255, 92, 119))
+    orange_button = ColorButton(70, 70, (255, 165, 0), (255, 165, 0))
+    brown_button = ColorButton(70, 70, (101, 67, 33), (101, 67, 33))
+    violet_button = ColorButton(70, 70, (139, 0, 255), (139, 0, 255))
+    light_green_button = ColorButton(70, 70, (0, 255, 0), (0, 255, 0))
+
     clock = pg.time.Clock()
     while True:
         events = pg.event.get()
@@ -361,7 +409,19 @@ def user_level():
         back.draw(20, 20, '← Назад', select_menu)
 
         drop_list.draw(screen)
-        screen.blit(drop_list_text, (30, 300))
+        screen.blit(drop_list_text, (400, 100))
+
+        screen.blit(select_color_text, (100, 300))
+        red_button.draw(30, 400, '')
+        yellow_button.draw(110, 400, '')
+        dark_blue_button.draw(190, 400, '')
+        blue_button.draw(270, 400, '')
+        green_button.draw(350, 400, '')
+        pink_button.draw(30, 600, '')
+        orange_button.draw(110, 600, '')
+        brown_button.draw(190, 600, '')
+        violet_button.draw(270, 600, '')
+        light_green_button.draw(350, 600, '')
 
         screen.blit(up_text, (250, 25))
 
@@ -472,12 +532,12 @@ def levels():
         elif current_level in es_n_levels:
             s = current_level.split('.')
             s = s[0][-1]
-            text_surface = up_font.render(f'Уровень {int(s) + 4}', True, (50, 50, 50))
+            text_surface = up_font.render(f'Уровень {int(s) + 2}', True, (50, 50, 50))
             screen.blit(text_surface, (375, 20))
         else:
             s = current_level.split('.')
             s = s[0][-2:]
-            text_surface = up_font.render(f'Уровень {int(s) + 4}', True, (50, 50, 50))
+            text_surface = up_font.render(f'Уровень {int(s) + 2}', True, (50, 50, 50))
             screen.blit(text_surface, (375, 20))
         play.draw(420, 650, '     Играть', game, font_size=30)
         image = load_image(current_level)
