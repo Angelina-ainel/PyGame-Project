@@ -205,7 +205,7 @@ def previous_counter():
 
 def game():
     global screen
-    back = Button(40, 40, (0, 0, 0), (255, 231, 189))
+    back = Button(50, 50, (0, 0, 0), (255, 231, 189))
     query = '''SELECT levels.left_top, levels.right_top, levels.left_bottom, levels.right_bottom, levels.size, 
 levels.cell_size, templates.type, difficulties.difficulty
 FROM levels INNER JOIN templates ON templates.id = levels.template
@@ -228,39 +228,39 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
     scheme.set_view(0, 75, cell_size)
     scheme.render()
     screen2 = pg.Surface(screen_size)
-    scheme_helping = Field(*field_size, left_top, right_top, left_bottom, right_bottom,'no_fixed')
-    scheme.set_view(0, 75, cell_size)
+    scheme_helping = Field(*field_size, left_top, right_top, left_bottom, right_bottom, 'no_fixed')
+    scheme_helping.set_view(0, 75, cell_size)
     scheme_helping.render()
     scheme_helping.sprite_group1.draw(screen2)
     scheme.mix_elements()
     fps = 30
     clock = pg.time.Clock()
-    create_particles((width // 2, height // 6), all_sprites)
+    create_particles((w // 2, h // 6), all_sprites)
     running = True
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                running = False
-                terminate()
-                # screen = pg.display.set_mode(size)
-                # switch_scene(levels)
-                # running = False
+                screen = pg.display.set_mode(size)
+                switch_scene(levels)
+                levels()
             scheme.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         scheme.sprite_group1.draw(screen)
-        back.draw(w - 50, h - 40, '← Назад', levels)
+        back.draw(w - 70, 10, '← Назад', levels)
         if [sprite.id for sprite in scheme.sprite_group2.sprites()] == \
                 list(range(1, field_size[0] * field_size[1] + 1)):  # width * height + 1
-            # тут должен быть салют и звёздочек, но его нет
+
             all_sprites.update()
             screen.blit(screen2, (0, 0))
+
             all_sprites.draw(screen)
             clock.tick(fps)
             if not all_sprites:
-                print('Вы прошли уровень!')
-                # screen = pg.display.set_mode(size)
-                # switch_scene(levels)
-                # тут должен появляться результат пользователя(count_moves) и поощрительные слова
+                screen = pg.display.set_mode(size) # это убрать здесь
+                switch_scene(levels) #
+                levels() #
+                # вот здесь должен появляться результат пользователя(count_moves) и поощрительные слова,
+                # а потом при нажатии на какую-нибудь кнопку назад возврашение на levels
         pg.display.flip()
     # print(count_moves)
 
@@ -402,8 +402,8 @@ def options():
 
 
 def levels():
-    global cur, next_count, previous_count, current_level, current_levels, c
-
+    global cur, next_count, previous_count, current_level, current_levels, c, screen
+    screen = pg.display.set_mode(size)
     back = Button(210, 65, (102, 255, 102), (50, 205, 50))
     left = Button(330, 50, (102, 255, 102), (50, 205, 50))
     right = Button(315, 50, (102, 255, 102), (50, 205, 50))
