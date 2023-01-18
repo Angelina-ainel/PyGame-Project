@@ -5,7 +5,6 @@ import os
 import sqlite3
 import numpy as np
 from PIL import ImageColor
-import random
 from field import Field, Element, Particle, condition_to_mix, create_particles
 
 con = sqlite3.connect('color_schemes.db')
@@ -28,8 +27,6 @@ first_levels = ['beginner_1.jpg', 'easy_4.jpg', 'normal_7.jpg', 'hard_10.jpg', '
 current_levels = ['beginner_1.jpg', 'beginner_2.jpg', 'beginner_3.jpg', 'beginner_16.jpg', 'beginner_17.jpg']
 c = 0
 current_level = current_levels[c]
-
-count_moves = 0
 
 next_count = 0
 previous_count = 0
@@ -206,6 +203,37 @@ def previous_counter():
     time.sleep(0.25)
 
 
+def result(width, height, moves, level_id):
+    global screen, up_font
+    up_font = pg.font.SysFont(c_font, 45)
+    screen = pg.display.set_mode((width, height))
+    window_size = w, h = width,  width * 1.3
+    print((width, height), window_size)
+    moves_int = moves
+    result = pg.Surface(window_size)
+    back = Button(50, 50, (255, 231, 189), (255, 168, 168))
+    query = """UPDATE levels
+    SET moves = ?
+    WHERE levels.id = ?"""
+    cur.execute(query, (moves_int, level_id))
+    con.commit()
+    while True:
+        events = pg.event.get()
+        for event in events:
+            if event.type == pg.QUIT:
+                terminate()
+        screen.fill((0, 0, 0))
+        result.fill((255, 231, 189))
+        level_passed = up_font.render('Уровень пройден!', True, (50, 50, 50))
+        text = f'Ходов: {moves_int}'
+        moves = up_font.render(text, True, (50, 50, 50))
+        result.blit(level_passed, (20, h // 3))
+        result.blit(moves, (20, h // 2))
+        screen.blit(result, (0, height // 6))
+        back.draw(w - 70, h - 70, '← Назад', levels)
+        pg.display.flip()
+
+
 def game():
     global screen
     back = Button(50, 50, (0, 0, 0), (255, 231, 189))
@@ -214,7 +242,6 @@ levels.cell_size, templates.type, difficulties.difficulty
 FROM levels INNER JOIN templates ON templates.id = levels.template
 INNER JOIN difficulties ON difficulties.id = levels.difficulty
 WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty = ?) AND levels.id = ?'''
-    pg.init()
     difficulty, id = current_level[:-4].split('_')
     res = cur.execute(query, (difficulty, int(id))).fetchone()
     all_sprites = pg.sprite.Group()
@@ -252,21 +279,14 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
         back.draw(w - 70, 10, '← Назад', levels)
         if [sprite.id for sprite in scheme.sprite_group2.sprites()] == \
                 list(range(1, field_size[0] * field_size[1] + 1)):  # width * height + 1
-
             all_sprites.update()
             screen.blit(screen2, (0, 0))
-
             all_sprites.draw(screen)
             clock.tick(fps)
             if not all_sprites:
-                screen = pg.display.set_mode(size) # это убрать здесь
-                switch_scene(levels) #
-                levels() #
-                print(count_moves)
-                # вот здесь должен появляться результат пользователя(count_moves) и поощрительные слова,
-                # а потом при нажатии на какую-нибудь кнопку назад возврашение на levels
+                switch_scene(result(w, h, scheme.sprite_group2.sprites()[-1].get_moves(), id))
+                result(w, h, scheme.sprite_group2.sprites()[-1].get_moves(), id)
         pg.display.flip()
-    # print(count_moves)
 
 
 def menu():
