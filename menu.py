@@ -204,6 +204,8 @@ def previous_counter():
 
 
 def game():
+    global screen
+    back = Button(40, 40, (0, 0, 0), (255, 231, 189))
     query = '''SELECT levels.left_top, levels.right_top, levels.left_bottom, levels.right_bottom, levels.size, 
 levels.cell_size, templates.type, difficulties.difficulty
 FROM levels INNER JOIN templates ON templates.id = levels.template
@@ -215,19 +217,19 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
     all_sprites = pg.sprite.Group()
     field_size = tuple(map(int, res[4].split('*')))
     cell_size = tuple(map(lambda x: int(x) * 2, res[5].split('*')))
-    print(cell_size)
-    w, h = screen_size = cell_size[0] * field_size[0], cell_size[1] * field_size[1]
-    playing_screen = pg.display.set_mode(screen_size)
+    screen_size = w, h = cell_size[0] * field_size[0], cell_size[1] * field_size[1] + 150
+    screen = pg.display.set_mode(screen_size)
+
     left_top = np.array(ImageColor.getcolor(res[0], "RGB"))
     right_top = np.array(ImageColor.getcolor(res[1], "RGB"))
     left_bottom = np.array(ImageColor.getcolor(res[2], "RGB"))
     right_bottom = np.array(ImageColor.getcolor(res[3], "RGB"))
     scheme = Field(*field_size, left_top, right_top, left_bottom, right_bottom, res[6])
-    scheme.set_view(0, 0, cell_size)
+    scheme.set_view(0, 75, cell_size)
     scheme.render()
-    screen2 = pg.Surface(size)
-    scheme_helping = Field(*field_size, left_top, right_top, left_bottom, right_bottom, 'no_fixed')
-    scheme.set_view(0, 0, cell_size)
+    screen2 = pg.Surface(screen_size)
+    scheme_helping = Field(*field_size, left_top, right_top, left_bottom, right_bottom,'no_fixed')
+    scheme.set_view(0, 75, cell_size)
     scheme_helping.render()
     scheme_helping.sprite_group1.draw(screen2)
     scheme.mix_elements()
@@ -238,21 +240,26 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                switch_scene(levels)
+                running = False
+                terminate()
+                # screen = pg.display.set_mode(size)
+                # switch_scene(levels)
                 # running = False
             scheme.sprite_group1.update(event)
-        playing_screen.fill((0, 0, 0))
-        scheme.sprite_group1.draw(playing_screen)
+        screen.fill((0, 0, 0))
+        scheme.sprite_group1.draw(screen)
+        back.draw(w - 50, h - 40, '← Назад', levels)
         if [sprite.id for sprite in scheme.sprite_group2.sprites()] == \
                 list(range(1, field_size[0] * field_size[1] + 1)):  # width * height + 1
+            # тут должен быть салют и звёздочек, но его нет
             all_sprites.update()
-            playing_screen.blit(screen2, (0, 0))
-            all_sprites.draw(playing_screen)
-            t = clock.tick(fps)
+            screen.blit(screen2, (0, 0))
+            all_sprites.draw(screen)
+            clock.tick(fps)
             if not all_sprites:
                 print('Вы прошли уровень!')
-                switch_scene(levels)
-                # running = False
+                # screen = pg.display.set_mode(size)
+                # switch_scene(levels)
                 # тут должен появляться результат пользователя(count_moves) и поощрительные слова
         pg.display.flip()
     # print(count_moves)
