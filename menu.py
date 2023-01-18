@@ -38,6 +38,27 @@ previous_count = 0
 current_scene = None
 
 
+def music_play():
+    pg.mixer.music.play(-1)
+
+
+def music_up():
+    global vol
+    vol += 1
+    pg.mixer.music.set_volume(vol)
+
+
+def music_down():
+    global vol
+    vol -= 1
+    pg.mixer.music.set_volume(vol)
+
+
+pg.mixer.music.load("data/ambient-sleep-music-food-for-the-soul.mp3")
+vol = 1
+music_play()
+
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -244,7 +265,7 @@ def result(width, height, moves, level_id):
     global screen, up_font
     up_font = pg.font.SysFont(c_font, 45)
     screen = pg.display.set_mode((width, height))
-    window_size = w, h = width,  width * 1.3
+    window_size = w, h = width, width * 1.3
     print((width, height), window_size)
     moves_int = moves
     result = pg.Surface(window_size)
@@ -407,6 +428,8 @@ def user_level():
     violet_button = ColorButton(70, 70, (139, 0, 255), (139, 0, 255))
     light_green_button = ColorButton(70, 70, (0, 255, 0), (0, 255, 0))
 
+    create = Button(150, 65, (255, 168, 18), (204, 102, 0))
+
     clock = pg.time.Clock()
     while True:
         events = pg.event.get()
@@ -418,7 +441,7 @@ def user_level():
                 box.handle_event(event)
         selected_option = drop_list.update(events)
         if selected_option >= 0:
-            print(templates_list[selected_option])
+            option = templates_list[selected_option]
 
         for box in input_boxes:
             box.update()
@@ -429,6 +452,7 @@ def user_level():
             box.draw(screen)
         up_text = up_font.render('Создайте свой уровень', True, (50, 50, 50))
         back.draw(20, 20, '← Назад', select_menu)
+        create.draw(20, 20, '← Назад')  #
 
         drop_list.draw(screen)
         screen.blit(drop_list_text, (400, 100))
@@ -460,6 +484,8 @@ def options():
     time.sleep(0.25)
     global up_font
     back = Button(210, 65, (42, 247, 237), (0, 150, 255))
+    up = Button(100, 100, (42, 247, 237), (0, 150, 255))
+    down = Button(100, 100, (42, 247, 237), (0, 150, 255))
 
     while True:
         events = pg.event.get()
@@ -471,6 +497,8 @@ def options():
 
         text_surface = up_font.render('Настройки', True, (50, 50, 50))
         back.draw(20, 20, '← Назад', menu)
+        up.draw(400, 300, '+', music_up)
+        back.draw(400, 400, '-', music_down)
 
         screen.blit(text_surface, (350, 30))
         pg.display.flip()
