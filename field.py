@@ -66,7 +66,7 @@ class Element(pg.sprite.Sprite):
                                                                         self.pushed_elem_topleft
                         self.id, change_places.id = change_places.id, self.id
                         global count_moves
-                        count_moves  += 1
+                        count_moves += 1
                     else:
                         self.rect.topleft = self.pushed_elem_topleft
                 else:
@@ -77,6 +77,10 @@ class Element(pg.sprite.Sprite):
             if self.pushed:
                 dx, dy = args[0].rel
                 self.rect.topleft = self.rect.x + dx, self.rect.y + dy
+
+    def get_moves(self):
+        global count_moves
+        return count_moves
 
 
 class Field:
@@ -138,8 +142,7 @@ class Field:
                     c += 1
                 fixing = self.check_fixing(r, c)
                 color = self.left_top + (coeff_h_left * r) + (coeff_w * c)
-                Element(r, c, self.top, self.cell_size, color, fixing, id, self.sprite_group1,
-                        self.sprite_group2)
+                Element(r, c, self.top, self.cell_size, color, fixing, id, self.sprite_group1, self.sprite_group2)
                 c += 1
                 id += 1
             else:
@@ -242,6 +245,6 @@ if __name__ == '__main__':
                 running = False
         pg.display.flip()
     print('Змечательно! вы завершили уровень!')
-    print(count_moves)
+    print(level.sprite_group2.sprites()[-1].get_moves())
     count = 0
     pg.quit()
