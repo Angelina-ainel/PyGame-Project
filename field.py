@@ -13,7 +13,7 @@ def condition_to_mix(elem):
 
 
 pg.init()
-width, height = size = 490, 720
+width, height = size = 600, 1000
 screen = pg.display.set_mode(size)
 count_moves = 0
 
@@ -215,8 +215,8 @@ if __name__ == '__main__':
     lb = np.array(ImageColor.getcolor('#EB2300', "RGB"))
     rb = np.array(ImageColor.getcolor('#FFE600', "RGB"))
     all_sprites = pg.sprite.Group()
-    level = Field(5, 7, lt, rt, lb, rb, 'horizontal lines')
-    level.set_view(0, 0, (70, 80))
+    level = Field(7, 10, lt, rt, lb, rb, 'horizontal lines')
+    level.set_view(0, 0, (90, 100))
     running = True
     level.render()
     screen2 = pg.Surface(size)
