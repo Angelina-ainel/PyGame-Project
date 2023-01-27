@@ -5,8 +5,7 @@ import os
 import sqlite3
 import numpy as np
 from PIL import ImageColor
-import random
-from field import Field, Element, Particle, condition_to_mix, create_particles
+from field import Field, create_particles
 
 con = sqlite3.connect('color_schemes.db')
 cur = con.cursor()
@@ -35,6 +34,9 @@ previous_count = 0
 
 current_scene = None
 
+width_input = 3
+height_input = 3
+selected_template = '4 corners'
 
 def music_play():
     pg.mixer.music.play(-1)
@@ -302,6 +304,65 @@ def result(width, height, moves, level_id):
         pg.display.flip()
 
 
+def user_game():
+    global screen, width_input, height_input, selected_template, color_list
+    back = Button(50, 50, (0, 0, 0), (195, 138, 219))
+    wi, hei = int(width_input), int(height_input)
+    field_size = wi, hei
+    quantity = wi * hei
+    coeff = abs(quantity - 35) // (13 + 2 * (quantity - 35) // 30)
+    if quantity >= 35:
+        cell_size = (55 - (5 * coeff)) * 2, (60 - (5 * coeff)) * 2
+    else:
+        cell_size = (55 + (5 * coeff)) * 2, (60 + (5 * coeff)) * 2
+    screen_size = x, y = cell_size[0] * field_size[0], cell_size[1] * field_size[1] + 150
+    screen = pg.display.set_mode(screen_size)
+
+    all_sprites = pg.sprite.Group()
+    left_top = np.array(color_list[0])
+    right_top = np.array(color_list[1])
+    left_bottom = np.array(color_list[2])
+    right_bottom = np.array(color_list[3])
+    scheme = Field(*field_size, left_top, right_top, left_bottom, right_bottom, selected_template)
+    scheme.set_view(0, 75, cell_size)
+    scheme.render()
+    screen2 = pg.Surface(screen_size)
+    scheme_helping = Field(*field_size, left_top, right_top, left_bottom, right_bottom, 'no_fixed')
+    scheme_helping.set_view(0, 75, cell_size)
+    scheme_helping.render()
+    scheme_helping.sprite_group1.draw(screen2)
+    scheme.mix_elements()
+    fps = 30
+    clock = pg.time.Clock()
+    create_particles((x // 2, y // 6), all_sprites)
+    running = True
+    while running:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                screen = pg.display.set_mode(size)
+                switch_scene(user_level)
+                user_level()
+            scheme.sprite_group1.update(event)
+        screen.fill((0, 0, 0))
+        scheme.sprite_group1.draw(screen)
+        back.draw(x - 70, 10, '← Назад', user_level)
+        if [sprite.id for sprite in scheme.sprite_group2.sprites()] == \
+                list(range(1, field_size[0] * field_size[1] + 1)):  # width * height + 1
+            all_sprites.update()
+            screen.blit(screen2, (0, 0))
+            all_sprites.draw(screen)
+            clock.tick(fps)
+            if not all_sprites:
+                print(f'Отлично! Вы завершили уровень! Ходов: {scheme.sprite_group2.sprites()[-1].get_moves()}')
+                screen = pg.display.set_mode(size)
+                switch_scene(user_level)
+                user_level()
+
+                # switch_scene(result(x, y, scheme.sprite_group2.sprites()[-1].get_moves(), id))
+                # result(x, y, scheme.sprite_group2.sprites()[-1].get_moves(), id)
+        pg.display.flip()
+
+
 def game():
     global screen
     back = Button(50, 50, (0, 0, 0), (255, 231, 189))
@@ -403,7 +464,7 @@ def select_menu():
 
 def user_level():
     time.sleep(0.25)
-    global up_font, c_font, down_font, select_color
+    global up_font, c_font, down_font, select_color, width_input, height_input, selected_template
 
     back = Button(210, 65, (185, 128, 209), (109, 49, 135))
 
@@ -452,6 +513,7 @@ def user_level():
         selected_option = drop_list.update(events)
         if selected_option >= 0:
             option = templates_list[selected_option]
+            selected_template = option
 
         for box in input_boxes:
             box.update()
@@ -462,8 +524,9 @@ def user_level():
             box.draw(screen)
         up_text = up_font.render('Создайте свой уровень', True, (50, 50, 50))
         back.draw(20, 20, '← Назад', select_menu)
-        create.draw(600, 600, 'Создать')
-
+        width_input = input_box1.text
+        height_input = input_box2.text
+        create.draw(600, 600, 'Создать', user_game)
         drop_list.draw(screen)
         screen.blit(drop_list_text, (400, 100))
 
