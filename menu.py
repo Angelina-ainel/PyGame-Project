@@ -39,7 +39,8 @@ current_scene = None
 
 
 def music_play():
-    pg.mixer.music.play(-1)
+    # pg.mixer.music.play(-1)
+    pass
 
 
 def music_up():
@@ -395,7 +396,7 @@ def user_level():
     time.sleep(0.25)
     global up_font, c_font, down_font, select_color
 
-    back = Button(210, 65, (255, 168, 18), (204, 102, 0))
+    back = Button(210, 65, (255, 168, 18), (109, 49, 135))
 
     field_size_text = down_font.render('Размер поля', True, (50, 50, 50))
     field_size_text1 = down_font.render('в клетках:', True, (50, 50, 50))
@@ -428,7 +429,7 @@ def user_level():
     violet_button = ColorButton(70, 70, (139, 0, 255), (139, 0, 255))
     light_green_button = ColorButton(70, 70, (0, 255, 0), (0, 255, 0))
 
-    create = Button(150, 65, (255, 168, 18), (204, 102, 0))
+    create = Button(200, 65, (255, 168, 18), (109, 49, 135))
 
     clock = pg.time.Clock()
     while True:
@@ -446,13 +447,13 @@ def user_level():
         for box in input_boxes:
             box.update()
 
-        screen.fill((255, 168, 18))
+        screen.fill((185, 128, 209))
 
         for box in input_boxes:
             box.draw(screen)
         up_text = up_font.render('Создайте свой уровень', True, (50, 50, 50))
         back.draw(20, 20, '← Назад', select_menu)
-        create.draw(20, 20, '← Назад')  #
+        create.draw(600, 600, 'Создать')  #
 
         drop_list.draw(screen)
         screen.blit(drop_list_text, (400, 100))
