@@ -20,8 +20,6 @@ c_font = 'calibri'
 up_font = pg.font.SysFont(c_font, 60)
 down_font = pg.font.SysFont(c_font, 30)
 
-select_color = down_font.render('✓', True, (50, 50, 50))
-
 difficulty = {1: 'beginner',
               2: 'easy',
               3: 'normal',
@@ -39,24 +37,25 @@ current_scene = None
 
 
 def music_play():
-    # pg.mixer.music.play(-1)
-    pass
+    pg.mixer.music.play(-1)
 
 
 def music_up():
     global vol
-    vol += 1
+    vol += 0.01
+    print(vol)
     pg.mixer.music.set_volume(vol)
 
 
 def music_down():
     global vol
-    vol -= 1
+    vol -= 0.01
+    print(vol)
     pg.mixer.music.set_volume(vol)
 
 
 pg.mixer.music.load("data/ambient-sleep-music-food-for-the-soul.mp3")
-vol = 1
+vol = 0.5
 music_play()
 
 
@@ -114,6 +113,7 @@ class Button:
 class ColorButton(Button):
     def __init__(self, width, height, inactive_color, active_color):
         super().__init__(width, height, inactive_color, active_color)
+        self.flag = False
         self.width = width
         self.height = height
         self.inactive_color = inactive_color
@@ -122,26 +122,35 @@ class ColorButton(Button):
     def draw(self, x, y, text, action=None, font_size=50):
         mouse = pg.mouse.get_pos()
         click = pg.mouse.get_pressed()
-        global color_list, down_font, select_color
+        global color_list, down_font
 
         if x < mouse[0] < x + self.width and y < mouse[1] < y + self.height and click[0] == 1:
-            pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
-            if len(color_list) < 3:
-                print(len(color_list))
-                color_list.append(self.active_color)
-                print(color_list)
-                time.sleep(0.3)
-
+            if self.flag:
+                pg.draw.rect(screen, (50, 50, 50), (x - 5, y - 5, self.width + 55, self.height + 5))
+                pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
             else:
-                for i in color_list:
-                    break
-                color_list.remove(i)
-                color_list.append(self.active_color)
-                print(color_list)
-                time.sleep(0.3)
+                pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
+
+            if self.active_color not in color_list:
+                if len(color_list) < 4:
+                    print(len(color_list))
+                    color_list.append(self.active_color)
+                    print(color_list)
+                    time.sleep(0.3)
+
+                else:
+                    color_list.remove(color_list[0])
+                    color_list.append(self.active_color)
+                    print(color_list)
+                    time.sleep(0.3)
+                    self.flag = False ###
 
         else:
-            pg.draw.rect(screen, self.inactive_color, (x, y, self.width, self.height))
+            if self.flag:
+                pg.draw.rect(screen, (50, 50, 50), (x - 5, y - 5, self.width + 55, self.height + 5))
+                pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
+            else:
+                pg.draw.rect(screen, self.inactive_color, (x, y, self.width, self.height))
 
 
 color_list = []
@@ -202,7 +211,7 @@ class Droplist:
         return -1
 
 
-COLOR_INACTIVE_S_U = pg.Color((204, 102, 0))
+COLOR_INACTIVE_S_U = pg.Color((109, 49, 135))
 COLOR_ACTIVE_S_U = pg.Color((70, 70, 70))
 FONT = pg.font.SysFont(c_font, 32)
 
@@ -396,7 +405,7 @@ def user_level():
     time.sleep(0.25)
     global up_font, c_font, down_font, select_color
 
-    back = Button(210, 65, (255, 168, 18), (109, 49, 135))
+    back = Button(210, 65, (185, 128, 209), (109, 49, 135))
 
     field_size_text = down_font.render('Размер поля', True, (50, 50, 50))
     field_size_text1 = down_font.render('в клетках:', True, (50, 50, 50))
@@ -414,7 +423,7 @@ def user_level():
         r = r[0]
         templates_list.append(r)
     drop_list = Droplist(
-        440, 150, 210, 40, (255, 168, 18), COLOR_INACTIVE_S_U, pg.font.SysFont(c_font, 30),
+        440, 150, 210, 40, (185, 128, 209), COLOR_INACTIVE_S_U, pg.font.SysFont(c_font, 30),
         templates_list)
 
     select_color_text = down_font.render('Выберите 4 цвета:', True, (50, 50, 50))
@@ -429,7 +438,7 @@ def user_level():
     violet_button = ColorButton(70, 70, (139, 0, 255), (139, 0, 255))
     light_green_button = ColorButton(70, 70, (0, 255, 0), (0, 255, 0))
 
-    create = Button(200, 65, (255, 168, 18), (109, 49, 135))
+    create = Button(200, 65, (185, 128, 209), (109, 49, 135))
 
     clock = pg.time.Clock()
     while True:
@@ -453,7 +462,7 @@ def user_level():
             box.draw(screen)
         up_text = up_font.render('Создайте свой уровень', True, (50, 50, 50))
         back.draw(20, 20, '← Назад', select_menu)
-        create.draw(600, 600, 'Создать')  #
+        create.draw(600, 600, 'Создать')
 
         drop_list.draw(screen)
         screen.blit(drop_list_text, (400, 100))
@@ -499,7 +508,7 @@ def options():
         text_surface = up_font.render('Настройки', True, (50, 50, 50))
         back.draw(20, 20, '← Назад', menu)
         up.draw(400, 300, '+', music_up)
-        back.draw(400, 400, '-', music_down)
+        down.draw(400, 400, '-', music_down)
 
         screen.blit(text_surface, (350, 30))
         pg.display.flip()
