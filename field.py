@@ -13,7 +13,7 @@ def condition_to_mix(elem):
 
 
 pg.init()
-width, height = size = 490, 720
+width, height = size = 600, 900
 screen = pg.display.set_mode(size)
 count_moves = 0
 
@@ -210,21 +210,21 @@ def create_particles(position, group):
 
 
 if __name__ == '__main__':
-    lt = np.array(ImageColor.getcolor('#2C0092', "RGB"))
-    rt = np.array(ImageColor.getcolor('#00CFE6', "RGB"))
-    lb = np.array(ImageColor.getcolor('#EB2300', "RGB"))
-    rb = np.array(ImageColor.getcolor('#FFE600', "RGB"))
+    lt = np.array(ImageColor.getcolor('#7059E5', "RGB"))
+    rt = np.array(ImageColor.getcolor('#002E35', "RGB"))
+    lb = np.array(ImageColor.getcolor('#FBCDFF', "RGB"))
+    rb = np.array(ImageColor.getcolor('#D600E5', "RGB"))
     all_sprites = pg.sprite.Group()
-    level = Field(5, 7, lt, rt, lb, rb, 'horizontal lines')
-    level.set_view(0, 0, (70, 80))
+    level = Field(20, 22, lt, rt, lb, rb, '4 corners')
+    level.set_view(0, 0, (20, 30))
     running = True
     level.render()
     screen2 = pg.Surface(size)
-    level_helping = Field(5, 7, lt, rt, lb, rb, 'no_fixed')
-    level_helping.set_view(0, 0, (70, 80))
+    level_helping = Field(6, 8, lt, rt, lb, rb, 'no_fixed')
+    level_helping.set_view(0, 0, (50, 60))
     level_helping.render()
     level_helping.sprite_group1.draw(screen2)
-    level.mix_elements()
+    # level.mix_elements()
 
     fps = 30
     clock = pg.time.Clock()
@@ -236,7 +236,7 @@ if __name__ == '__main__':
             level.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         level.sprite_group1.draw(screen)
-        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 5 * 7 + 1)):  # width * height + 1
+        if [sprite.id for sprite in level.sprite_group2.sprites()] == list(range(1, 6 * 8 + 1)):  # width * height + 1
             all_sprites.update()
             screen.blit(screen2, (0, 0))
             all_sprites.draw(screen)

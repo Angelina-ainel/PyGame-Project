@@ -37,6 +37,7 @@ current_scene = None
 width_input = 3
 height_input = 3
 selected_template = '4 corners'
+mistake = False
 
 
 def music_play():
@@ -235,13 +236,6 @@ class InputBox:
         if not str(self.text).isdigit():
             self.text = ''
             self.txt_surface = FONT.render(self.text, True, self.color)
-        if self.text:
-            if int(self.text) < 3:
-                self.text = '3'
-                self.txt_surface = FONT.render(self.text, True, self.color)
-            elif int(self.text) > 20:
-                self.text = '20'
-                self.txt_surface = FONT.render(self.text, True, self.color)
 
     def update(self):
         width = max(200, self.txt_surface.get_width() + 10)
@@ -299,12 +293,29 @@ def result(width, height, moves, inserting, level_id=1):
         result.blit(level_passed, (20, h // 3))
         result.blit(moves, (20, h // 2))
         screen.blit(result, (0, height // 6))
-        back.draw(w - 70, h - 70, '← Назад', levels)
+        if inserting:
+            back.draw(w - 70, h - 70, '← Назад', levels)
+        else:
+            back.draw(w - 70, h - 70, '← Назад', user_level)
         pg.display.flip()
 
 
+def conditions(w_input, h_input, colors):
+    if not w_input or not h_input or not colors:
+        return False
+    elif int(width_input) not in range(3, 21) or int(height_input) not in range(3, 21) or \
+            len(color_list) < 4:
+        return False
+    return True
+
+
 def user_game():
-    global screen, width_input, height_input, selected_template, color_list
+    global screen, width_input, height_input, selected_template, color_list, mistake
+    if not conditions(width_input, height_input, color_list):
+        mistake = True
+        switch_scene(user_level)
+        user_level()
+    mistake = False
     back = Button(50, 50, (0, 0, 0), (195, 138, 219))
     wi, hei = int(width_input), int(height_input)
     field_size = wi, hei
@@ -338,7 +349,7 @@ def user_game():
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                screen = pg.display.set_mode(size)
+                # screen = pg.display.set_mode(size)
                 switch_scene(user_level)
                 user_level()
             scheme.sprite_group1.update(event)
@@ -469,10 +480,10 @@ def select_menu():
 
 def user_level():
     time.sleep(0.25)
-    global up_font, c_font, down_font, width_input, height_input, selected_template, screen
+    global up_font, c_font, down_font, width_input, height_input, selected_template, screen, mistake
     screen = pg.display.set_mode(size)
     back = Button(210, 65, (185, 128, 209), (109, 49, 135))
-
+    mistake_message = down_font.render('Укажите правильные данные!', True, (50, 50, 50))
     field_size_text = down_font.render('Размер поля', True, (50, 50, 50))
     field_size_text1 = down_font.render('в клетках:', True, (50, 50, 50))
     field_size_text2 = down_font.render('(Минимум 3, максимум 20)', True, (50, 50, 50))
@@ -568,6 +579,9 @@ def user_level():
             button = ColorButton(70, 70, color, color)
             button.draw(x, 400, '')
             x += 80
+
+        if mistake:
+            screen.blit(mistake_message, (width - 400, height - 50))
 
         screen.blit(up_text, (250, 25))
 
