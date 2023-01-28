@@ -273,20 +273,21 @@ def previous_counter():
     time.sleep(0.25)
 
 
-def result(width, height, moves, level_id):
+def result(width, height, moves, inserting, level_id=1):
     global screen, up_font
     up_font = pg.font.SysFont(c_font, 45)
     screen = pg.display.set_mode((width, height))
     window_size = w, h = width, width * 1.3
-    print((width, height), window_size)
+    # print((width, height), window_size)
     moves_int = moves
     result = pg.Surface(window_size)
     back = Button(50, 50, (255, 231, 189), (255, 168, 168))
-    query = """UPDATE levels
-    SET moves = ?
-    WHERE levels.id = ?"""
-    cur.execute(query, (moves_int, level_id))
-    con.commit()
+    if inserting:
+        query = """UPDATE levels
+        SET moves = ?
+        WHERE levels.id = ?"""
+        cur.execute(query, (moves_int, level_id))
+        con.commit()
     while True:
         events = pg.event.get()
         for event in events:
@@ -353,9 +354,6 @@ def user_game():
             all_sprites.draw(screen)
             clock.tick(fps)
             if not all_sprites:
-                print(f'Отлично! Вы завершили уровень! Ходов: {scheme.sprite_group2.sprites()[-1].get_moves()}')
-                screen = pg.display.set_mode(size)
-
                 screen3 = pg.Surface((wi * cell_size[0], hei * cell_size[1]))
                 scheme.set_view(0, 0, cell_size)
                 scheme.render()
@@ -367,11 +365,8 @@ def user_game():
                     pg.image.save(image, 'data/' + 'user_level_' + str(max(numbers) + 1) + '.jpg')
                 else:
                     pg.image.save(image, 'data/' + 'user_level_1' + '.jpg')
-                switch_scene(user_level)
-                user_level()
-
-                # switch_scene(result(x, y, scheme.sprite_group2.sprites()[-1].get_moves(), id))
-                # result(x, y, scheme.sprite_group2.sprites()[-1].get_moves(), id)
+                switch_scene(result(x, y, scheme.sprite_group2.sprites()[-1].get_moves(), False))
+                result(x, y, scheme.sprite_group2.sprites()[-1].get_moves(), False)
         pg.display.flip()
 
 
@@ -425,8 +420,8 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
             all_sprites.draw(screen)
             clock.tick(fps)
             if not all_sprites:
-                switch_scene(result(w, h, scheme.sprite_group2.sprites()[-1].get_moves(), id))
-                result(w, h, scheme.sprite_group2.sprites()[-1].get_moves(), id)
+                switch_scene(result(w, h, scheme.sprite_group2.sprites()[-1].get_moves(), True, level_id=id))
+                result(w, h, scheme.sprite_group2.sprites()[-1].get_moves(), True, level_id=id)
         pg.display.flip()
 
 
