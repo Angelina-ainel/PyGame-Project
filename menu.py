@@ -355,6 +355,18 @@ def user_game():
             if not all_sprites:
                 print(f'Отлично! Вы завершили уровень! Ходов: {scheme.sprite_group2.sprites()[-1].get_moves()}')
                 screen = pg.display.set_mode(size)
+
+                screen3 = pg.Surface((wi * cell_size[0], hei * cell_size[1]))
+                scheme.set_view(0, 0, cell_size)
+                scheme.render()
+                scheme.sprite_group1.draw(screen3)
+                image = pg.transform.scale(screen3, (300, 450))
+                if any(map(lambda img: img.startswith('user_level'), os.listdir('data'))):
+                    numbers = [int(n[11:-4]) for n in
+                               filter(lambda file: file.startswith('user_level'), os.listdir('data'))]
+                    pg.image.save(image, 'data/' + 'user_level_' + str(max(numbers) + 1) + '.jpg')
+                else:
+                    pg.image.save(image, 'data/' + 'user_level_1' + '.jpg')
                 switch_scene(user_level)
                 user_level()
 
@@ -464,8 +476,8 @@ def select_menu():
 
 def user_level():
     time.sleep(0.25)
-    global up_font, c_font, down_font, select_color, width_input, height_input, selected_template
-
+    global up_font, c_font, down_font, select_color, width_input, height_input, selected_template, screen
+    screen = pg.display.set_mode(size)
     back = Button(210, 65, (185, 128, 209), (109, 49, 135))
 
     field_size_text = down_font.render('Размер поля', True, (50, 50, 50))
