@@ -31,3 +31,6 @@ def make_images():
         scheme.sprite_group1.draw(screen)
         image = pg.transform.scale(screen, (300, 450))
         pg.image.save(image, 'data/' + level[-1] + '_' + str(level[0]) + '.jpg')
+
+
+make_images()
