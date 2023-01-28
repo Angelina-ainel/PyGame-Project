@@ -38,6 +38,7 @@ width_input = 3
 height_input = 3
 selected_template = '4 corners'
 
+
 def music_play():
     pg.mixer.music.play(-1)
 
@@ -115,7 +116,6 @@ class Button:
 class ColorButton(Button):
     def __init__(self, width, height, inactive_color, active_color):
         super().__init__(width, height, inactive_color, active_color)
-        self.flag = False
         self.width = width
         self.height = height
         self.inactive_color = inactive_color
@@ -127,11 +127,7 @@ class ColorButton(Button):
         global color_list, down_font
 
         if x < mouse[0] < x + self.width and y < mouse[1] < y + self.height and click[0] == 1:
-            if self.flag:
-                pg.draw.rect(screen, (50, 50, 50), (x - 5, y - 5, self.width + 55, self.height + 5))
-                pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
-            else:
-                pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
+            pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
 
             if self.active_color not in color_list:
                 if len(color_list) < 4:
@@ -145,14 +141,9 @@ class ColorButton(Button):
                     color_list.append(self.active_color)
                     print(color_list)
                     time.sleep(0.3)
-                    self.flag = False ###
 
         else:
-            if self.flag:
-                pg.draw.rect(screen, (50, 50, 50), (x - 5, y - 5, self.width + 55, self.height + 5))
-                pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
-            else:
-                pg.draw.rect(screen, self.inactive_color, (x, y, self.width, self.height))
+            pg.draw.rect(screen, self.inactive_color, (x, y, self.width, self.height))
 
 
 color_list = []
@@ -223,7 +214,7 @@ class InputBox:
     def __init__(self, x, y, w, h, text=''):
         self.rect = pg.Rect(x, y, w, h)
         self.color = COLOR_INACTIVE_S_U
-        self.text = text
+        self.text = str(text)
         self.txt_surface = FONT.render(text, True, self.color)
         self.active = False
 
@@ -236,13 +227,20 @@ class InputBox:
             self.color = COLOR_ACTIVE_S_U if self.active else COLOR_INACTIVE_S_U
         if event.type == pg.KEYDOWN:
             if self.active:
-                if event.key == pg.K_RETURN:
-                    print(self.text)
-                    self.text = ''
-                elif event.key == pg.K_BACKSPACE:
+                if event.key == pg.K_BACKSPACE:
                     self.text = self.text[:-1]
                 else:
-                    self.text += event.unicode
+                    self.text += str(event.unicode)
+                self.txt_surface = FONT.render(self.text, True, self.color)
+        if not str(self.text).isdigit():
+            self.text = ''
+            self.txt_surface = FONT.render(self.text, True, self.color)
+        if self.text:
+            if int(self.text) < 3:
+                self.text = '3'
+                self.txt_surface = FONT.render(self.text, True, self.color)
+            elif int(self.text) > 20:
+                self.text = '20'
                 self.txt_surface = FONT.render(self.text, True, self.color)
 
     def update(self):
@@ -471,17 +469,18 @@ def select_menu():
 
 def user_level():
     time.sleep(0.25)
-    global up_font, c_font, down_font, select_color, width_input, height_input, selected_template, screen
+    global up_font, c_font, down_font, width_input, height_input, selected_template, screen
     screen = pg.display.set_mode(size)
     back = Button(210, 65, (185, 128, 209), (109, 49, 135))
 
     field_size_text = down_font.render('Размер поля', True, (50, 50, 50))
     field_size_text1 = down_font.render('в клетках:', True, (50, 50, 50))
-    input_box1 = InputBox(170, 180, 50, 32)
-    input_box2 = InputBox(170, 235, 50, 32)
+    field_size_text2 = down_font.render('(Минимум 3, максимум 20)', True, (50, 50, 50))
+    input_box1 = InputBox(170, 210, 50, 32)
+    input_box2 = InputBox(170, 265, 50, 32)
     input_boxes = [input_box1, input_box2]
     w_text = down_font.render('Ширина =', True, (50, 50, 50))
-    h_text = down_font.render('Высота =', True, (50, 50, 50))
+    h_text = down_font.render(' Высота  =', True, (50, 50, 50))
 
     drop_list_text = down_font.render('Выберите шаблон поля:', True, (50, 50, 50))
     query = '''SELECT type FROM templates'''
@@ -499,12 +498,19 @@ def user_level():
     yellow_button = ColorButton(70, 70, (255, 255, 0), (255, 255, 0))
     dark_blue_button = ColorButton(70, 70, (0, 0, 255), (0, 0, 255))
     blue_button = ColorButton(70, 70, (15, 147, 255), (15, 147, 255))
-    green_button = ColorButton(70, 70, (0, 128, 0), (0, 128, 0))
+    dark_green_button = ColorButton(70, 70, (0, 128, 0), (0, 128, 0))
     pink_button = ColorButton(70, 70, (255, 92, 119), (255, 92, 119))
     orange_button = ColorButton(70, 70, (255, 165, 0), (255, 165, 0))
     brown_button = ColorButton(70, 70, (101, 67, 33), (101, 67, 33))
     violet_button = ColorButton(70, 70, (139, 0, 255), (139, 0, 255))
     light_green_button = ColorButton(70, 70, (0, 255, 0), (0, 255, 0))
+    pink_forest_button = ColorButton(70, 70, (101, 0, 1), (101, 0, 1))
+    spring_green_button = ColorButton(70, 70, (0, 250, 154), (0, 250, 154))
+    light_blue_button = ColorButton(70, 70, (135, 206, 250), (135, 206, 250))
+    green_button = ColorButton(70, 70, (0, 179, 0), (0, 179, 0))
+    dark_violet_button = ColorButton(70, 70, (79, 0, 112), (79, 0, 112))
+
+    select_colors = down_font.render(' Выбранные цвета:', True, (50, 50, 50))
 
     create = Button(200, 65, (185, 128, 209), (109, 49, 135))
 
@@ -533,28 +539,43 @@ def user_level():
         back.draw(20, 20, '← Назад', select_menu)
         width_input = input_box1.text
         height_input = input_box2.text
-        create.draw(600, 600, 'Создать', user_game)
+        create.draw(730, 600, 'Создать', user_game)
         drop_list.draw(screen)
         screen.blit(drop_list_text, (400, 100))
 
-        screen.blit(select_color_text, (100, 300))
+        screen.blit(select_color_text, (100, 340))
         red_button.draw(30, 400, '')
         yellow_button.draw(110, 400, '')
         dark_blue_button.draw(190, 400, '')
         blue_button.draw(270, 400, '')
-        green_button.draw(350, 400, '')
+        dark_green_button.draw(350, 400, '')
+
+        pink_forest_button.draw(30, 500, '')
+        spring_green_button.draw(110, 500, '')
+        light_blue_button.draw(190, 500, '')
+        green_button.draw(270, 500, '')
+        dark_violet_button.draw(350, 500, '')
+
         pink_button.draw(30, 600, '')
         orange_button.draw(110, 600, '')
         brown_button.draw(190, 600, '')
         violet_button.draw(270, 600, '')
         light_green_button.draw(350, 600, '')
 
+        screen.blit(select_colors, (710, 340))
+        x = 680
+        for color in color_list:
+            button = ColorButton(70, 70, color, color)
+            button.draw(x, 400, '')
+            x += 80
+
         screen.blit(up_text, (250, 25))
 
         screen.blit(field_size_text, (100, 100))
         screen.blit(field_size_text1, (110, 130))
-        screen.blit(w_text, (30, 180))
-        screen.blit(h_text, (30, 235))
+        screen.blit(field_size_text2, (30, 160))
+        screen.blit(w_text, (30, 210))
+        screen.blit(h_text, (30, 265))
 
         pg.display.flip()
         clock.tick(30)
