@@ -30,7 +30,7 @@ class Element(pg.sprite.Sprite):
         self.color = color
         pg.draw.rect(self.image, self.color, self.rect)
         self.fixed = fixed
-        if self.fixed:
+        if self.fixed:  # если элемент зафиксирован(нельзя передвигать), то он отмечается чёрным кружком в центре
             pg.draw.circle(self.image, 'black', self.rect.center, self.width // 20)
         self.mixed = False
         self.rect.x = col * self.width
@@ -47,13 +47,13 @@ class Element(pg.sprite.Sprite):
                     self.rect.y < args[0].pos[1] < self.rect.y + self.height and not self.fixed:
                 self.pushed = True
                 self.pushed_elem_topleft = self.rect.topleft
-                self.group1.remove(self)
+                self.group1.remove(self)  # для отрисовки перемешения элемента сверху остальных
                 self.group1.add(self)
         if args and args[0].type == pg.MOUSEBUTTONUP:
             if self.pushed:
                 colisions = list(filter(lambda sprite: pg.sprite.collide_mask(self, sprite) and not sprite.fixed
                                          and sprite != self, self.group1))
-                if colisions:
+                if colisions:  # при перемещении плитки, она ставится на место с наибольшей площадью пересечения
                     change_places = max(colisions,
                                         key=lambda s: self.mask.overlap_area(s.mask, (self.rect.x - s.rect.x,
                                                                                       self.rect.y - s.rect.y)))
@@ -66,8 +66,9 @@ class Element(pg.sprite.Sprite):
                                                                         self.pushed_elem_topleft
                         self.id, change_places.id = change_places.id, self.id
                         global count_moves
-                        count_moves += 1
-                    else:
+                        count_moves += 1  # считает ходы
+                    else:  # если площадь наибольшего пересечения меньше площади половины плитки или плитку
+                        # пытаются переместить за пределы экрана, то она возвращается на изначальное место
                         self.rect.topleft = self.pushed_elem_topleft
                 else:
                     self.rect.topleft = self.pushed_elem_topleft
@@ -104,7 +105,7 @@ class Field:
         self.top = top
         self.cell_size = cell_size
 
-    def check_fixing(self, r, c):
+    def check_fixing(self, r, c):  # описания шаблонов в файле level_templates.txt
         if self.fixed_elems == '4 corners':
             if (c == 0 and r == 0) or (c == 0 and r == self.height - 1) \
                     or (c == self.width - 1 and r == 0) or (c == self.width - 1 and r == self.height - 1):
@@ -132,21 +133,21 @@ class Field:
     def render(self):
         id = 1
         r, c = 0, 0
-        coeff_h_left = np.trunc((self.left_bottom - self.left_top) / (self.height - 1))
-        coeff_h_right = np.trunc((self.right_bottom - self.right_top) / (self.height - 1))
+        coeff_h_left = np.trunc((self.left_bottom - self.left_top) / (self.height - 1))  # коэффициенты изменения цвета
+        coeff_h_right = np.trunc((self.right_bottom - self.right_top) / (self.height - 1))  # по вертикали
         for n in range(self.height * self.width):
             coeff_w = np.trunc(((self.right_top + (coeff_h_right * r)) -
                                 (self.left_top + (coeff_h_left * r))) / (self.width - 1))
-            if c < self.width:
+            if c < self.width:  # если элемент не первый в ряду
                 if c == 0 and r != 0:
                     c += 1
-                fixing = self.check_fixing(r, c)
+                fixing = self.check_fixing(r, c)  # проверка, нужно ли закрепить элемент согласно переданному шаблону
                 color = self.left_top + (coeff_h_left * r) + (coeff_w * c)
                 Element(r, c, self.top, self.cell_size, color, fixing, id, self.sprite_group1, self.sprite_group2)
                 c += 1
                 id += 1
             else:
-                c = 0
+                c = 0  # иначе смена счётчика
                 r += 1
                 fixing = self.check_fixing(r, c)
                 Element(r, c, self.top, self.cell_size,
@@ -156,9 +157,9 @@ class Field:
     def mix_elements(self):
         sprites_list = self.sprite_group1.sprites()
         for i in range(len(sprites_list)):
-            if not sprites_list[i].mixed and not sprites_list[i].fixed:
-                pair = random.choice(list(filter(condition_to_mix, sprites_list)))
-                sprites_list[i].rect, pair.rect = pair.rect, sprites_list[i].rect
+            if not sprites_list[i].mixed and not sprites_list[i].fixed:  # выбор случайной пары для перемешения
+                pair = random.choice(list(filter(condition_to_mix, sprites_list)))  # если она не закреплена
+                sprites_list[i].rect, pair.rect = pair.rect, sprites_list[i].rect  # и уже не перемешана
                 sprites_list[i].id, pair.id = pair.id, sprites_list[i].id
                 pair.mixed = True
                 sprites_list[i].mixed = True
@@ -209,7 +210,7 @@ def create_particles(position, group):
         Particle(position, random.choice(numbers), random.choice(numbers), group)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # код для проверки создания цветовой гаммы
     lt = np.array(ImageColor.getcolor('#7059E5', "RGB"))
     rt = np.array(ImageColor.getcolor('#002E35', "RGB"))
     lb = np.array(ImageColor.getcolor('#FBCDFF', "RGB"))
@@ -224,7 +225,7 @@ if __name__ == '__main__':
     level_helping.set_view(0, 0, (50, 60))
     level_helping.render()
     level_helping.sprite_group1.draw(screen2)
-    # level.mix_elements()
+    # level.mix_elements(), если включить, то плитки перемешаются
 
     fps = 30
     clock = pg.time.Clock()

@@ -269,12 +269,11 @@ def result(width, height, moves, inserting, level_id=1):
     global screen, up_font
     up_font = pg.font.SysFont(c_font, 45)
     screen = pg.display.set_mode((width, height))
-    window_size = w, h = width, height * 0.75
-    # print((width, height), window_size)
+    window_size = w, h = width, height * 0.75  # окно с результатом красивого размера
     moves_int = moves
     result = pg.Surface(window_size)
     back = Button(200, 70, (255, 231, 185), (255, 198, 169))
-    if inserting:
+    if inserting:  # если уровень из базы данных, то в столбец moves вставляется это значение
         query = """UPDATE levels
         SET moves = ?
         WHERE levels.id = ?"""
@@ -293,7 +292,7 @@ def result(width, height, moves, inserting, level_id=1):
         result.blit(level_passed, (20, h // 3))
         result.blit(moves, (20, h // 2))
         screen.blit(result, (0, height // 8))
-        if inserting:
+        if inserting:  # возврат на разные сцены
             back.draw(w - 200, h - 10, '← Назад', levels)
         else:
             back.draw(w - 200, h - 10, '← Назад', user_level)
@@ -311,8 +310,8 @@ def conditions(w_input, h_input, colors):
 
 def user_game():
     global screen, width_input, height_input, selected_template, color_list, mistake
-    if not conditions(width_input, height_input, color_list):
-        mistake = True
+    if not conditions(width_input, height_input, color_list):  # если данные некорректны, на экран выводится
+        mistake = True  # уровень не создастся
         switch_scene(user_level)
         user_level()
     mistake = False
@@ -321,8 +320,8 @@ def user_game():
     field_size = wi, hei
     quantity = wi * hei
     coeff = abs(quantity - 35) // (13 + 2 * (quantity - 35) // 30)
-    if quantity >= 35:
-        cell_size = (55 - (5 * coeff)) * 2, (60 - (5 * coeff)) * 2
+    if quantity >= 35:  # автоматический расчёт размеров клетки на основе введённых размеров поля
+        cell_size = (55 - (5 * coeff)) * 2, (60 - (5 * coeff)) * 2  # относительно поля 5*7 и размера клетки 55*60 пикс.
     else:
         cell_size = (55 + (5 * coeff)) * 2, (60 + (5 * coeff)) * 2
     screen_size = x, y = cell_size[0] * field_size[0], cell_size[1] * field_size[1] + 150
@@ -349,7 +348,6 @@ def user_game():
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                # screen = pg.display.set_mode(size)
                 switch_scene(user_level)
                 user_level()
             scheme.sprite_group1.update(event)
@@ -362,14 +360,14 @@ def user_game():
             screen.blit(screen2, (0, 0))
             all_sprites.draw(screen)
             clock.tick(fps)
-            if not all_sprites:
+            if not all_sprites:  # сохранение изображения законченного уровня на память в папу data
                 screen3 = pg.Surface((wi * cell_size[0], hei * cell_size[1]))
                 scheme.set_view(0, 0, cell_size)
                 scheme.render()
                 scheme.sprite_group1.draw(screen3)
                 image = pg.transform.scale(screen3, (300, 450))
                 if any(map(lambda img: img.startswith('user_level'), os.listdir('data'))):
-                    numbers = [int(n[11:-4]) for n in
+                    numbers = [int(n[11:-4]) for n in  # сохранение с увеличивющимися порядковыми номерами
                                filter(lambda file: file.startswith('user_level'), os.listdir('data'))]
                     pg.image.save(image, 'data/' + 'user_level_' + str(max(numbers) + 1) + '.jpg')
                 else:
@@ -387,23 +385,24 @@ levels.cell_size, templates.type, difficulties.difficulty
 FROM levels INNER JOIN templates ON templates.id = levels.template
 INNER JOIN difficulties ON difficulties.id = levels.difficulty
 WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty = ?) AND levels.id = ?'''
-    difficulty, id = current_level[:-4].split('_')
+    difficulty, id = current_level[:-4].split('_')  # создание гаммы из бд по id и сложности из названия файла
     res = cur.execute(query, (difficulty, int(id))).fetchone()
     all_sprites = pg.sprite.Group()
     field_size = tuple(map(int, res[4].split('*')))
     cell_size = tuple(map(lambda x: int(x) * 2, res[5].split('*')))
     screen_size = w, h = cell_size[0] * field_size[0], cell_size[1] * field_size[1] + 150
-    screen = pg.display.set_mode(screen_size)
+    screen = pg.display.set_mode(screen_size)  # размер окна, соответствующий размеру игрового поля
 
-    left_top = np.array(ImageColor.getcolor(res[0], "RGB"))
+    left_top = np.array(ImageColor.getcolor(res[0], "RGB"))  # преобразование HEX-формата цвета в RGB с помощью pillow
     right_top = np.array(ImageColor.getcolor(res[1], "RGB"))
     left_bottom = np.array(ImageColor.getcolor(res[2], "RGB"))
     right_bottom = np.array(ImageColor.getcolor(res[3], "RGB"))
     scheme = Field(*field_size, left_top, right_top, left_bottom, right_bottom, res[6])
     scheme.set_view(0, 75, cell_size)
     scheme.render()
-    screen2 = pg.Surface(screen_size)
-    scheme_helping = Field(*field_size, left_top, right_top, left_bottom, right_bottom, 'no_fixed')
+    screen2 = pg.Surface(screen_size)  # вспомогательный холст и гамма, для правильного отображения разлетающихся звёзд
+    scheme_helping = Field(*field_size, left_top, right_top, left_bottom, right_bottom,  # после завершения уровня
+                           'no_fixed')
     scheme_helping.set_view(0, 75, cell_size)
     scheme_helping.render()
     scheme_helping.sprite_group1.draw(screen2)
@@ -422,15 +421,15 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
         screen.fill((0, 0, 0))
         scheme.sprite_group1.draw(screen)
         back.draw(w - 70, 10, '← Назад', levels)
-        if [sprite.id for sprite in scheme.sprite_group2.sprites()] == \
-                list(range(1, field_size[0] * field_size[1] + 1)):  # width * height + 1
-            all_sprites.update()
-            screen.blit(screen2, (0, 0))
+        if [sprite.id for sprite in scheme.sprite_group2.sprites()] == list(
+                range(1, field_size[0] * field_size[1] + 1)):  # width * height + 1
+            all_sprites.update()  # если в группе спрайты следуют по порядку, то запускается салют
+            screen.blit(screen2, (0, 0))   # в честь завршения уровня
             all_sprites.draw(screen)
             clock.tick(fps)
             if not all_sprites:
                 switch_scene(result(w, h, scheme.sprite_group2.sprites()[-1].get_moves(), True, level_id=id))
-                result(w, h, scheme.sprite_group2.sprites()[-1].get_moves(), True, level_id=id)
+                result(w, h, scheme.sprite_group2.sprites()[-1].get_moves(), True, level_id=id)  # показ результата
         pg.display.flip()
 
 
@@ -548,7 +547,7 @@ def user_level():
             box.draw(screen)
         up_text = up_font.render('Создайте свой уровень', True, (50, 50, 50))
         back.draw(20, 20, '← Назад', select_menu)
-        width_input = input_box1.text
+        width_input = input_box1.text  # получение текста из полей для ввода
         height_input = input_box2.text
         create.draw(730, 600, 'Создать', user_game)
         drop_list.draw(screen)
@@ -580,7 +579,7 @@ def user_level():
             button.draw(x, 400, '')
             x += 80
 
-        if mistake:
+        if mistake:  # вывод сообщения об ошибке
             screen.blit(mistake_message, (width - 400, height - 50))
 
         screen.blit(up_text, (250, 25))
