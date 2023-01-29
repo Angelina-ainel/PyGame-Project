@@ -357,7 +357,7 @@ def user_game():
             scheme.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         scheme.sprite_group1.draw(screen)
-        back.draw(x - 70, 10, '← Назад', user_level)
+        back.draw(x - 70, 10, '←', user_level)
         if [sprite.id for sprite in scheme.sprite_group2.sprites()] == \
                 list(range(1, field_size[0] * field_size[1] + 1)):  # width * height + 1
             all_sprites.update()
@@ -424,7 +424,7 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
             scheme.sprite_group1.update(event)
         screen.fill((0, 0, 0))
         scheme.sprite_group1.draw(screen)
-        back.draw(w - 70, 10, '← Назад', levels)
+        back.draw(w - 70, 10, '←', levels)
         if [sprite.id for sprite in scheme.sprite_group2.sprites()] == list(
                 range(1, field_size[0] * field_size[1] + 1)):  # width * height + 1
             all_sprites.update()  # если в группе спрайты следуют по порядку, то запускается салют
