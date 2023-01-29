@@ -10,6 +10,22 @@ from field import Field, create_particles
 con = sqlite3.connect('color_schemes.db')
 cur = con.cursor()
 
+difficulty = {1: 'beginner',
+              2: 'easy',
+              3: 'normal',
+              4: 'hard',
+              5: 'expert'}
+
+#  initial choice of difficulty and first level
+query = '''SELECT id FROM levels WHERE difficulty = 1'''
+res = cur.execute(query).fetchall()
+current_levels = []
+c = 0
+for r in res:
+    r = f'{difficulty[1]}_{str(r[0])}.jpg'
+    current_levels.append(r)
+current_level = current_levels[c]
+
 pg.init()
 pg.display.set_caption('Цветовые гаммы')
 size = width, height = 1000, 750
@@ -18,16 +34,6 @@ screen = pg.display.set_mode(size)
 c_font = 'calibri'
 up_font = pg.font.SysFont(c_font, 60)
 down_font = pg.font.SysFont(c_font, 30)
-
-difficulty = {1: 'beginner',
-              2: 'easy',
-              3: 'normal',
-              4: 'hard',
-              5: 'expert'}
-first_levels = ['beginner_1.jpg', 'easy_4.jpg', 'normal_7.jpg', 'hard_10.jpg', 'expert_13.jpg']
-current_levels = ['beginner_1.jpg', 'beginner_2.jpg', 'beginner_3.jpg', 'beginner_16.jpg', 'beginner_17.jpg']
-c = 0
-current_level = current_levels[c]
 
 next_count = 0
 previous_count = 0
@@ -44,22 +50,23 @@ def music_play():
     pg.mixer.music.play(-1)
 
 
-def music_up():
+def music_up():  # turn up the music volume
     global vol
-    vol += 0.01
-    print(vol)
+    if vol < 1:
+        vol += 0.01
     pg.mixer.music.set_volume(vol)
 
 
-def music_down():
+def music_down():  # turn down the music volume
     global vol
-    vol -= 0.01
-    print(vol)
+    if vol > 0:
+        vol -= 0.01
     pg.mixer.music.set_volume(vol)
 
 
 pg.mixer.music.load("data/ambient-sleep-music-food-for-the-soul.mp3")
 vol = 0.5
+pg.mixer.music.set_volume(vol)
 music_play()
 
 
@@ -90,7 +97,7 @@ def print_text(text, x, y, font_color=(50, 50, 50), font_type=c_font, font_size=
     screen.blit(button_text, (x, y))
 
 
-class Button:
+class Button:  # create buttons
     def __init__(self, width, height, inactive_color=(255, 192, 203), active_color=(255, 82, 108)):
         self.width = width
         self.height = height
@@ -101,20 +108,20 @@ class Button:
         mouse = pg.mouse.get_pos()
         click = pg.mouse.get_pressed()
 
-        if x < mouse[0] < x + self.width and y < mouse[1] < y + self.height:
+        if x < mouse[0] < x + self.width and y < mouse[1] < y + self.height:  # drawing a button with an active color
             pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
 
-            if click[0] == 1:  # здесь будет звук нажатия кнопки
+            if click[0] == 1:
                 if action is not None:
                     action()
 
-        else:
+        else:  # drawing a button with an inactive color
             pg.draw.rect(screen, self.inactive_color, (x, y, self.width, self.height))
 
         print_text(text, x + 10, y + 10, font_size=font_size)
 
 
-class ColorButton(Button):
+class ColorButton(Button):  # create colored buttons in user_level()
     def __init__(self, width, height, inactive_color, active_color):
         super().__init__(width, height, inactive_color, active_color)
         self.width = width
@@ -127,30 +134,28 @@ class ColorButton(Button):
         click = pg.mouse.get_pressed()
         global color_list, down_font
 
+        #  draw a button with an active color
         if x < mouse[0] < x + self.width and y < mouse[1] < y + self.height and click[0] == 1:
             pg.draw.rect(screen, self.active_color, (x, y, self.width, self.height))
 
             if self.active_color not in color_list:
                 if len(color_list) < 4:
-                    print(len(color_list))
                     color_list.append(self.active_color)
-                    print(color_list)
                     time.sleep(0.3)
 
                 else:
                     color_list.remove(color_list[0])
                     color_list.append(self.active_color)
-                    print(color_list)
                     time.sleep(0.3)
 
-        else:
+        else:  # draw a button with an inactive color
             pg.draw.rect(screen, self.inactive_color, (x, y, self.width, self.height))
 
 
 color_list = []
 
 
-class Droplist:
+class Droplist:  # create droplist in user_level()
     def __init__(self, x, y, w, h, inactive_color, active_color, font, option_list, selected=0):
         self.inactive_color = inactive_color
         self.active_color = active_color
@@ -168,7 +173,7 @@ class Droplist:
         btn_text = self.font.render(self.option_list[self.selected], 1, (50, 50, 50))
         surf.blit(btn_text, btn_text.get_rect(center=self.rect.center))
 
-        if self.draw_menu:
+        if self.draw_menu:  # draw a drop list if the menu is open
             for i, text in enumerate(self.option_list):
                 rect = self.rect.copy()
                 rect.y += (i + 1) * self.rect.height
@@ -220,20 +225,20 @@ class InputBox:
         self.active = False
 
     def handle_event(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN:
+        if event.type == pg.MOUSEBUTTONDOWN:  # changes the color of the frames
             if self.rect.collidepoint(event.pos):
                 self.active = not self.active
             else:
                 self.active = False
             self.color = COLOR_ACTIVE_S_U if self.active else COLOR_INACTIVE_S_U
-        if event.type == pg.KEYDOWN:
+        if event.type == pg.KEYDOWN:  # writes the text entered by the user
             if self.active:
                 if event.key == pg.K_BACKSPACE:
                     self.text = self.text[:-1]
                 else:
                     self.text += str(event.unicode)
                 self.txt_surface = FONT.render(self.text, True, self.color)
-        if not str(self.text).isdigit():
+        if not str(self.text).isdigit():  # checking for numbers
             self.text = ''
             self.txt_surface = FONT.render(self.text, True, self.color)
 
@@ -242,9 +247,7 @@ class InputBox:
         self.rect.w = width
 
     def draw(self, screen):
-        # Blit the text.
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
-        # Blit the rect.
         pg.draw.rect(screen, self.color, self.rect, 2)
 
 
@@ -253,13 +256,13 @@ def terminate():
     sys.exit()
 
 
-def next_counter():
+def next_counter():  # Moving to the next level
     global next_count
     next_count = 1
     time.sleep(0.25)
 
 
-def previous_counter():
+def previous_counter():  # Moving to the previous level
     global previous_count
     previous_count = 1
     time.sleep(0.25)
@@ -434,7 +437,7 @@ WHERE levels.difficulty = (SELECT difficulties.id WHERE difficulties.difficulty 
         pg.display.flip()
 
 
-def menu():
+def menu():  # draw main menu
     select_button = Button(470, 65)
     option_button = Button(240, 65)
     quit_button = Button(320, 65)
@@ -457,7 +460,7 @@ def menu():
         pg.display.flip()
 
 
-def select_menu():
+def select_menu():  # draws a menu for selecting game modes
     time.sleep(0.25)
     user_options = Button(660, 65, (255, 243, 82), (255, 165, 0))
     off_levels = Button(380, 65, (255, 243, 82), (255, 165, 0))
@@ -478,7 +481,7 @@ def select_menu():
         pg.display.flip()
 
 
-def user_level():
+def user_level():  # draws a level creation menu
     time.sleep(0.25)
     global up_font, c_font, down_font, width_input, height_input, selected_template, screen, mistake
     screen = pg.display.set_mode(size)
@@ -575,12 +578,12 @@ def user_level():
 
         screen.blit(select_colors, (710, 340))
         x = 680
-        for color in color_list:
+        for color in color_list:  # draws the selected colors
             button = ColorButton(70, 70, color, color)
             button.draw(x, 400, '')
             x += 80
 
-        if mistake:
+        if mistake:  # writes an error message
             screen.blit(mistake_message, (width - 400, height - 50))
 
         screen.blit(up_text, (250, 25))
@@ -595,12 +598,12 @@ def user_level():
         clock.tick(30)
 
 
-def options():
+def options():  # draw music options
     time.sleep(0.25)
-    global up_font
+    global up_font, vol
     back = Button(210, 65, (42, 247, 237), (0, 150, 255))
-    up = Button(100, 100, (42, 247, 237), (0, 150, 255))
-    down = Button(100, 100, (42, 247, 237), (0, 150, 255))
+    up = Button(240, 65, (42, 247, 237), (0, 150, 255))
+    down = Button(260, 65, (42, 247, 237), (0, 150, 255))
 
     while True:
         events = pg.event.get()
@@ -611,24 +614,43 @@ def options():
         screen.fill((42, 247, 237))
 
         text_surface = up_font.render('Настройки', True, (50, 50, 50))
+        text_surface1 = up_font.render('Настройте громкость', True, (50, 50, 50))
+        text_surface2 = up_font.render('музыки:', True, (50, 50, 50))
+        mus_vol = up_font.render(str(round(vol, 2)), True, (50, 50, 50))  # writes the music volume value
+
         back.draw(20, 20, '← Назад', menu)
-        up.draw(400, 300, '+', music_up)
-        down.draw(400, 400, '-', music_down)
+        up.draw(380, 370, 'Увеличить', music_up)
+        down.draw(380, 460, 'Уменьшить', music_down)
 
         screen.blit(text_surface, (350, 30))
+        screen.blit(text_surface1, (240, 140))
+        screen.blit(text_surface2, (400, 180))
+        screen.blit(mus_vol, (450, 270))
         pg.display.flip()
 
 
-def levels():
+def levels():  # draw menu levels
     time.sleep(0.25)
-    global cur, next_count, previous_count, current_level, current_levels, c, screen
+    global cur, next_count, previous_count, screen, current_level, current_levels, c
+
+    # creates a list of the first levels
+    fl_count = 1
+    first_levels = []
+    for k_diff in range(5):
+        k_diff += 1
+        result = f'{difficulty[k_diff]}_{fl_count}.jpg'
+        fl_count += 3
+        first_levels.append(result)
+
     screen = pg.display.set_mode(size)
     back = Button(210, 65, (102, 255, 102), (50, 205, 50))
     left = Button(330, 50, (102, 255, 102), (50, 205, 50))
     right = Button(315, 50, (102, 255, 102), (50, 205, 50))
     play = Button(180, 50, (102, 255, 102), (50, 205, 50))
-    query = '''SELECT difficulty FROM difficulties'''
-    res = cur.execute(query).fetchall()
+
+    # filling in the drop list
+    query1 = '''SELECT difficulty FROM difficulties'''
+    res = cur.execute(query1).fetchall()
     templates_list = []
     for r in res:
         r = r[0]
@@ -643,7 +665,8 @@ def levels():
             if event.type == pg.QUIT:
                 terminate()
 
-        selected_option = list1.update(event_list) + 1
+        # user's choice of difficulty and level
+        selected_option = list1.update(event_list) + 1  # the number of the selected difficulty
         query = '''SELECT id FROM levels WHERE difficulty = ?'''
         res = cur.execute(query, (selected_option,)).fetchall()
         if selected_option > 0:
@@ -656,6 +679,8 @@ def levels():
                 result = f'{dif_str}_{str(r[0])}.jpg'
                 current_levels.append(result)
             current_level = current_levels[c]
+
+        # switching between levels
         if current_level != current_levels[-1] and next_count > 0:
             c += 1
             current_level = current_levels[c]
@@ -679,31 +704,17 @@ def levels():
         screen.fill((102, 255, 102))
         list1.draw(screen)
         back.draw(20, 20, '← Назад', select_menu)
-        left.draw(20, 650, '<- Предыдущий уровень', font_size=30, action=previous_counter)
-        right.draw(670, 650, 'Следующий уровень ->', font_size=30, action=next_counter)
-        right_levels = ['beginner_1.jpg', 'beginner_2.jpg', 'beginner_3.jpg']
-        not_right_levels = ['beginner_16.jpg', 'beginner_17.jpg', 'beginner_18.jpg', 'beginner_19.jpg']
-        es_n_levels = ['easy_4.jpg', 'easy_5.jpg', 'easy_6.jpg', 'normal_7.jpg', 'normal_8.jpg', 'normal_9.jpg']
-        if current_level in right_levels:
-            s = current_level.split('.')
-            s = s[0][-1]
-            text_surface = up_font.render(f'Уровень {s}', True, (50, 50, 50))
-            screen.blit(text_surface, (375, 20))
-        elif current_level in not_right_levels:
-            s = current_level.split('.')
-            s = s[0][-2:]
-            text_surface = up_font.render(f'Уровень {int(s) - 12}', True, (50, 50, 50))
-            screen.blit(text_surface, (375, 20))
-        elif current_level in es_n_levels:
-            s = current_level.split('.')
-            s = s[0][-1]
-            text_surface = up_font.render(f'Уровень {int(s) + 2}', True, (50, 50, 50))
-            screen.blit(text_surface, (375, 20))
-        else:
-            s = current_level.split('.')
-            s = s[0][-2:]
-            text_surface = up_font.render(f'Уровень {int(s) + 2}', True, (50, 50, 50))
-            screen.blit(text_surface, (375, 20))
+        left.draw(20, 650, '<- Предыдущий уровень', previous_counter, font_size=30)
+        right.draw(670, 650, 'Следующий уровень ->', next_counter, font_size=30)
+
+        # visual numbering of levels
+        n_cur_l = 1
+        for count, level in enumerate(current_levels):
+            if current_level == level:
+                n_cur_l = count + 1
+        text_surface = up_font.render(f'Уровень {n_cur_l}', True, (50, 50, 50))
+        screen.blit(text_surface, (385, 20))
+
         play.draw(420, 650, '     Играть', game, font_size=30)
         image = load_image(current_level)
 
@@ -712,6 +723,7 @@ def levels():
         border = 3
 
         pg.draw.rect(screen, (0, 0, 0), (x, y, w, h))
+        # drawing a black frame behind the level image
         pg.draw.rect(screen, (102, 255, 102), (x + border, y + border, w - border * 2, h - border * 2))
 
         screen.blit(image, (360, 150))
