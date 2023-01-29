@@ -269,11 +269,11 @@ def result(width, height, moves, inserting, level_id=1):
     global screen, up_font
     up_font = pg.font.SysFont(c_font, 45)
     screen = pg.display.set_mode((width, height))
-    window_size = w, h = width, width * 1.3
+    window_size = w, h = width, height * 0.75
     # print((width, height), window_size)
     moves_int = moves
     result = pg.Surface(window_size)
-    back = Button(50, 50, (255, 231, 189), (255, 168, 168))
+    back = Button(200, 70, (255, 231, 185), (255, 198, 169))
     if inserting:
         query = """UPDATE levels
         SET moves = ?
@@ -292,11 +292,11 @@ def result(width, height, moves, inserting, level_id=1):
         moves = up_font.render(text, True, (50, 50, 50))
         result.blit(level_passed, (20, h // 3))
         result.blit(moves, (20, h // 2))
-        screen.blit(result, (0, height // 6))
+        screen.blit(result, (0, height // 8))
         if inserting:
-            back.draw(w - 70, h - 70, '← Назад', levels)
+            back.draw(w - 200, h - 10, '← Назад', levels)
         else:
-            back.draw(w - 70, h - 70, '← Назад', user_level)
+            back.draw(w - 200, h - 10, '← Назад', user_level)
         pg.display.flip()
 
 
