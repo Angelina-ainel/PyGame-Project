@@ -6,7 +6,8 @@ from field import Field
 
 
 pg.init()
-con = sqlite3.connect("color_schemes.db")
+con = sqlite3.connect('color_schemes.db')
+cur = con.cursor()
 
 
 def make_images():
@@ -15,7 +16,7 @@ def make_images():
     FROM levels INNER JOIN templates ON templates.id = levels.template
     INNER JOIN difficulties ON difficulties.id = levels.difficulty
     """
-    result = con.cursor().execute(query).fetchall()
+    result = cur.execute(query).fetchall()
     for level in result:
         size = list(map(int, level[5].split('*')))
         cell_size = list(map(int, level[6].split('*')))
